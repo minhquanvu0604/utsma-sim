@@ -28,9 +28,6 @@
 
     <!-- Import utsma base element with the chassis -->
     <xacro:include filename="$(find utsma_description)/urdf/utsma_base.urdf.xacro"/>
-        <!-- <xacro:arg name="publish_tf" value="$(arg publish_tf)"/>
-        <xacro:arg name="simulate_perception" value="$(arg simulate_perception)"/>
-    </xacro:include> -->
 
     <!-- Import all available sensors -->
     <!-- <xacro:include filename="$(find utsma_description)/sensors/all_sensors.urdf.xacro" /> -->
@@ -38,10 +35,7 @@
     <!-- <xacro:include filename="$(find utsma_description)/sensors/VLP-16.urdf.xacro"/> -->
 
     <!--  Include the plugins  -->
-    <!-- <xacro:include filename="$(find utsma_description)/urdf/utsma_plugins.gazebo.xacro">
-        <xacro:arg name="publish_tf" value="$(arg publish_tf)"/>
-        <xacro:arg name="simulate_perception" value="$(arg simulate_perception)"/>
-    </xacro:include> -->
+    <xacro:include filename="$(find utsma_description)/urdf/eufs_plugins.gazebo.xacro"/>
 
     <!-- *************** -->
     <!-- Robots Elements -->
