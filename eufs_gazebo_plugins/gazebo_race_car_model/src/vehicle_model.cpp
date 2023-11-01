@@ -323,6 +323,7 @@ void VehicleModel::setModelState() {
   model->SetWorldPose(pose);
   model->SetAngularVel(angular);
   model->SetLinearVel(vel);
+  
 }
 
 void VehicleModel::publishCarState() {
@@ -522,17 +523,22 @@ void VehicleModel::publishTf() {
 
 void VehicleModel::onCmd(const ackermann_msgs::AckermannDriveStampedConstPtr &msg) {
   // TODO: Should add delay to the controls
-  if (state_machine_.canDrive()) {
+  // if (state_machine_.canDrive()) {
+  if (true){
     input_.delta = msg->drive.steering_angle;
     input_.acc    = msg->drive.acceleration;
+    // state_.v_x = msg->drive.speed;
+    // state_.r = msg->drive.steering_angle_velocity;
+
   } else {
     // TODO: Should  do something else to stop the car but is this good for now
     input_.delta = 0;
     input_.acc    = -100;
   }
-
+  // state_.validate();
+  ROS_INFO_STREAM("acc: " << input_.acc);
   input_.validate(param_);
-
+  
   time_last_cmd_ = ros::Time::now().toSec();
 }
 

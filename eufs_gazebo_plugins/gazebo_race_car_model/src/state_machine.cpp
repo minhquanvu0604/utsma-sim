@@ -42,7 +42,7 @@ StateMachine::StateMachine(boost::shared_ptr<ros::NodeHandle> &nh) : nh_(nh)
     // init state machine state
     as_state_ = eufs_msgs::CanState::AS_OFF;
     ami_state_ = eufs_msgs::CanState::AMI_NOT_SELECTED;
-    driving_flag_ = false;
+    driving_flag_ = false;//false as default
 
     // Subscribers
     flag_sub_ = nh_->subscribe<std_msgs::Bool>("/ros_can/mission_flag", 1, &StateMachine::flagCallback, this);
