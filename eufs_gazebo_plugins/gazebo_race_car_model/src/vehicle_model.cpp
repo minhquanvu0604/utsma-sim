@@ -322,6 +322,7 @@ void VehicleModel::setModelState() {
 
   model->SetWorldPose(pose);
   model->SetAngularVel(angular);
+  ROS_INFO_STREAM("vel: " << vel);
   model->SetLinearVel(vel);
   
 }
@@ -536,7 +537,7 @@ void VehicleModel::onCmd(const ackermann_msgs::AckermannDriveStampedConstPtr &ms
     input_.acc    = -100;
   }
   // state_.validate();
-  ROS_INFO_STREAM("acc: " << input_.acc);
+  // ROS_INFO_STREAM("acc: " << input_.acc);
   input_.validate(param_);
   
   time_last_cmd_ = ros::Time::now().toSec();
