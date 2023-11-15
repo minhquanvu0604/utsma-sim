@@ -8,6 +8,9 @@ project(d_triang)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED)
+find_package(CGAL REQUIRED COMPONENTS Core)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -112,9 +115,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-# ${catkin_INCLUDE_DIRS}
+    include/d_triang
+    ${catkin_INCLUDE_DIRS}
+    ${CGAL_INCLUDE_DIRS}
+    ${Qt5Widgets_INCLUDE_DIRS}
 )
+
+add_subdirectory(testing-code)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -145,6 +152,8 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+#######target_link_libraries(your_target_name ${CGAL_LIBRARIES} Qt5::Widgets)
+
 
 #############
 ## Install ##

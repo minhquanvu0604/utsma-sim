@@ -6,6 +6,9 @@ find_package(CGAL REQUIRED COMPONENTS Core)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 
+include_directories(../include/d_triang)
+
+
 # Find Boost
 # find_package(Boost REQUIRED COMPONENTS multiprecision)
 
@@ -20,8 +23,8 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 
 
 # Add executable
-add_executable(test_compute_DT testComputeDT.cpp)
+add_executable(${PROJECT_NAME} test_compute_DT.cpp)
 # add_executable(test_CGAL testCGAl.cpp)
 
 # Link against CGAL, Boost, and GMP libraries
-target_link_libraries(test_compute_DT CGAL::CGAL ${Boost_LIBRARIES} ${GMP_LIBRARIES} Qt5::Widgets)
+target_link_libraries(${PROJECT_NAME} CGAL::CGAL ${Boost_LIBRARIES} ${GMP_LIBRARIES} Qt5::Widgets)
