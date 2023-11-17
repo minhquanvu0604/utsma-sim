@@ -16,6 +16,12 @@ typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef Kernel::Point_2 Point_2;
 typedef CGAL::Delaunay_triangulation_2<Kernel> DelaunayTriangulation;
 
+
+
+/*
+ * A class for plotting out the path
+ * Won't be used whatsoever when running real-time
+*/
 class PlotWidget : public QWidget {
 public:
     PlotWidget(
@@ -24,7 +30,7 @@ public:
         const std::vector<std::pair<Point_2, Point_2>>& edges, 
         QWidget* parent = nullptr
         )
-        : QWidget(parent), _points_global(points_global), _points_local(points_local), _edges(edges){
+        : QWidget(parent), _points_global{points_global}, _points_local{points_local}, _edges{edges}{
 
             
 
@@ -144,7 +150,7 @@ protected:
             painter.drawText(textPos_local, text);        
 
             // Write global coordinates
-            text = QString("(%1, %2)").arg(CGAL::to_double(_points_global.at(i).x())).arg(CGAL::to_double(_points_global.at(i).y()));
+            text = QString("(%1, %2)").arg(CGAL::to_double(_points_global.at(i).x())).arg(-CGAL::to_double(_points_global.at(i).y()));
             // Adjust the text position to be above and centered over the point
             QPointF textPos_global = _plot_location_pts.at(i) - QPointF(textWidth / 2, textHeight*2 + vertice_R);
             painter.drawText(textPos_global, text);             
