@@ -7,7 +7,7 @@
 #include <limits>
 #include <cmath>
 
-#include "d_triang_visualise.hpp"
+#include "../plotting/include/d_triang_Qt.hpp"
 #include "d_triang_types.hpp"
 
 typedef DT::Node Node;
@@ -51,22 +51,21 @@ int main(int argc, char *argv[]) {
         std::cerr << "No cones layout number " << number << std::endl;
         return 1;
     }
-    std::string yamlPath = path_map[number];
+    std::string yaml_path = path_map[number];
 
     // Read YAML file
-    std::string basePath = "../cones_layout/";  
-    std::string fullPath = basePath + yamlPath;
-    YAML::Node config = YAML::LoadFile(fullPath);
-    const auto& pointsNode = config["points"];
-    for (const auto& pointNode : pointsNode) {
-        double x = pointNode["x"].as<double>();
-        double y = pointNode["y"].as<double>();
+    std::string base_path = "../cones_layout/";  
+    std::string full_path = base_path + yaml_path;
+    YAML::Node config = YAML::LoadFile(full_path);
+    const auto& points_node = config["points"];
+    for (const auto& point_node : points_node) {
+        double x = point_node["x"].as<double>();
+        double y = point_node["y"].as<double>();
         points_global.push_back(Point_2(x, y));
     }
 
     //-----------Qt -----------Qt -----------Qt -----------Qt -----------//
     // In real code the car's pose is in the origin
-    // Process car pose
     double car_x = 0.0, car_y = 0.0, car_yaw = 0.0;
     if (config["car_pose"]) {
         auto car_pose = config["car_pose"];
@@ -204,7 +203,7 @@ int main(int argc, char *argv[]) {
     DelaunayTriangulation::Edge_circulator c = dt.incident_edges(smallest), done(c);
     if (c != 0) {
         do {
-            if ((c->first->vertex((c->second + 1) % 3) == second_smallest) || (c->first->vertex((c->second + 2) % 3) == v2)) {
+            if ((c->first->vertex((c->second + 1) % 3) == second_smallest) || (c->first->vertex((c->second + 2) % 3) == second_smallest)) {
                 nearest_edge = *c;
                 break;
             }
@@ -217,7 +216,7 @@ int main(int argc, char *argv[]) {
     // ---------------------------- STEP 3: CONSTRUCT THE TREE ----------------------------- //
 
     std::vector<std::shared_ptr<Node>> node_list; // LIST OF NODES HERE
-    node_list.push_back();
+    // node_list.push_back();
 
 
 

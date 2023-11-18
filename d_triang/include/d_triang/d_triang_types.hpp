@@ -7,7 +7,9 @@
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef Kernel::Point_2 Point_2;
-
+typedef CGAL::Delaunay_triangulation_2<Kernel> DelaunayTriangulation;
+typedef DelaunayTriangulation::Edge Edge;
+typedef DelaunayTriangulation::Edge_circulator Edge_circulator;
 
 namespace DT{
 
@@ -26,6 +28,7 @@ namespace DT{
         // double reward = 0; // DO I NEED THIS? REWARD IS FOR FULL PATH
         double accumulate_angle_diff = -1.0;
 
+        Edge edge;
         std::vector<std::shared_ptr<Node>> children;
         std::shared_ptr<Node> parent;
 
