@@ -54,13 +54,12 @@ void DTriangPlot::set_config_num(int config_num){
 void DTriangPlot::read_cone_config(){
     
     if (PATH_MAP.find(_config_num) == PATH_MAP.end()) {
-        std::cerr << "No cones layout config number " << _config_num << std::endl;
-        return;
+        throw std::runtime_error("No cones layout config number " + std::to_string(_config_num));
     }
     std::string yaml_path = PATH_MAP.at(_config_num);
 
     // Read YAML file
-    std::string base_path = "../cones_layout/";  
+    std::string base_path = "../../plotting/cones_layout/";  
     std::string full_path = base_path + yaml_path;
     YAML::Node config = YAML::LoadFile(full_path);
     const auto& points_node = config["points"];

@@ -6,7 +6,7 @@ find_package(CGAL REQUIRED COMPONENTS Core)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-include_directories(../include/d_triang)
+include_directories(../include)
 
 
 # Find Boost

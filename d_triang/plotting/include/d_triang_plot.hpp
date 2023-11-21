@@ -9,7 +9,7 @@
 #include "d_triang_planner.hpp"
 #include "d_triang_Qt.hpp"
 
-typedef DT::Node Node;
+// typedef DT::Node Node;
 typedef DT::Pose Pose;
 
 class DTriangPlot : public DTriangPlanner {

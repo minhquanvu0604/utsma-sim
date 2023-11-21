@@ -7,7 +7,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 include_directories(
-    ../include/d_triang
+    ../include/geometry
     include
     src
     )
@@ -27,7 +27,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Add executable
 add_executable(${PROJECT_NAME} src/d_triang_plot.cpp)
 
-add_library(d_triang_planner ../src/d_triang_planner.cpp)
+add_library(d_triang_planner ../src/geometry/d_triang_planner.cpp)
 add_library(d_triang_Qt src/d_triang_Qt.cpp)
 
 

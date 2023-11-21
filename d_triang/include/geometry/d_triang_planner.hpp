@@ -10,6 +10,7 @@
 #include <yaml-cpp/yaml.h>
 #include <limits>
 #include <cmath>
+#include <queue>
 
 #include "d_triang_types.hpp"
 
@@ -19,7 +20,7 @@
 // typedef DelaunayTriangulation::Edge Edge;
 // typedef DelaunayTriangulation::Edge_circulator Edge_circulator;
 
-typedef DT::Node Node;
+// typedef DT::Node Node;
 typedef DT::Pose Pose;
 
 class DTriangPlanner {
@@ -29,6 +30,9 @@ public:
 
     void set_cones(std::vector<Point_2> points_local);
     
+    /*
+     * Main function to perform planning
+    */
     void plan();
 
     /*
@@ -43,25 +47,24 @@ public:
 
     void contruct_graph();
 
-    /*
-     * Explore 2 incident edges of the current edge
-    */
-    std::pair<Edge, Edge> expand(const Edge& input_edge);
+    // /*
+    //  * Explore 2 incident edges of the current edge
+    // */
+    // std::pair<Edge, Edge> expand(const Edge& input_edge);
 
+    void expand(Edge start);
+    std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
 
-
-    // void expand(std::shared_ptr<Node> current_node);
 
 
 protected:
     DelaunayTriangulation _dt;
     std::vector<Point_2> _points_local;
 
-    std::vector<Node> _node_list;
+    // std::vector<Node> _node_list;
 
 private:
-    
-    
+    std::vector<Point_2> edge_to_point(const std::vector<Edge>& path);
 
 
 };

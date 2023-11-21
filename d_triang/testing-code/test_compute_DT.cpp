@@ -10,7 +10,7 @@
 #include "../plotting/include/d_triang_Qt.hpp"
 #include "d_triang_types.hpp"
 
-typedef DT::Node Node;
+// typedef DT::Node Node;
 typedef DT::Pose Pose;
 
 
