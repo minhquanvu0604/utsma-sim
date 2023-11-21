@@ -31,16 +31,12 @@ add_library(d_triang_planner ../src/geometry/d_triang_planner.cpp)
 add_library(d_triang_Qt src/d_triang_Qt.cpp)
 
 
-
-
 # Link against CGAL, Boost, and GMP libraries
 target_link_libraries(${PROJECT_NAME} 
     CGAL::CGAL 
     ${Boost_LIBRARIES} 
     #${GMP_LIBRARIES} 
-    
     ${YAML_CPP_LIBRARIES}
-
     d_triang_planner
     d_triang_Qt
     )

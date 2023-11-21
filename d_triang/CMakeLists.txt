@@ -10,7 +10,9 @@ project(d_triang)
 find_package(catkin REQUIRED)
 find_package(CGAL REQUIRED COMPONENTS Core)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
+find_package(GMP REQUIRED)
+find_package(MPFR REQUIRED)
+find_package(GTest REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -116,17 +118,21 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
     include
+    include/geometry
+    ${Boost_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
     ${CGAL_INCLUDE_DIRS}
     ${Qt5Widgets_INCLUDE_DIRS}
+    ${GTEST_INCLUDE_DIRS}
+    ${GMP_INCLUDE_DIR}
+    ${MPFR_INCLUDE_DIR}
 )
+
 
 #add_subdirectory(testing-code)
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/d_triang.cpp
-# )
+add_library(d_triang_planner src/geometry/d_triang_planner.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -138,11 +144,19 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/d_triang_node.cpp)
 
+add_executable(geometry_tests
+    test/geometry/get_next_edges_test.cpp
+    # Add other test source files here
+)
+set_target_properties(geometry_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -152,7 +166,8 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-#######target_link_libraries(your_target_name ${CGAL_LIBRARIES} Qt5::Widgets)
+
+target_link_libraries(geometry_tests d_triang_planner ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} gtest_main pthread)
 
 
 #############
@@ -202,9 +217,9 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_d_triang.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+# catkin_add_gtest(geometry_tests test/geometry/get_next_edges_test.cpp)
+# if(TARGET geometry_tests)
+#   target_link_libraries(geometry_tests d_triang_planner ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} gtest_main pthread)
 # endif()
 
 ## Add folders to be run by python nosetests

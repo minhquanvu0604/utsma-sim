@@ -28,7 +28,6 @@ Edge DTriangPlanner::triangulate(){
     _dt.insert(_points_local.begin(), _points_local.end()); 
 
 
-
     // The two nearest points are ones with smallest x
     DelaunayTriangulation::Vertex_handle smallest, second_smallest;
     double smallest_x = std::numeric_limits<double>::max(), second_smallest_x = std::numeric_limits<double>::max();
@@ -85,7 +84,7 @@ Edge DTriangPlanner::triangulate(){
 /*
  * Expand all the possible paths in a bread-first fashion
 */
-void DTriangPlanner::expand(Edge start) {
+std::vector<std::vector<Point_2>> DTriangPlanner::expand(Edge start) {
     
     // All the possible paths found  
     std::vector<std::vector<Point_2>> paths;
@@ -125,6 +124,8 @@ void DTriangPlanner::expand(Edge start) {
             }
         }
     }
+
+    return paths;
 }
 
 
@@ -182,19 +183,25 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
     // Find the opposite face of the current edge
     DelaunayTriangulation::Face_handle new_face = current_edge.first;
 
-
+    // Logic check - Recognise first edge
     if (previous_edge.first == DelaunayTriangulation::Face_handle()) {
         std::cout << "First edge" << std::endl;
     }
 
-    // Ensure we don't go back to the face containing the previous edge
+    // The new face must not contain the previous edge
+    // The function is assumed to be called with finite edges, so new_face is hence finite face
+    // if (new_face == previous_edge.first || new_face == previous_edge.first->neighbor(previous_edge.second) || _dt.is_infinite(new_face))
     if (new_face == previous_edge.first || new_face == previous_edge.first->neighbor(previous_edge.second) || _dt.is_infinite(new_face))
         new_face = current_edge.first->neighbor(current_edge.second);
+
+    std::cout << "1" << std::endl;
 
     // Logic check - The new face should be finite 
     if (_dt.is_infinite(new_face)) 
         throw std::runtime_error("The new face is infinite - should not happen");
     
+    std::cout << "2" << std::endl;
+
     // The two other edges of the new face
     int new_face_index = new_face->index(current_edge.first);
     Edge edge1(new_face, (new_face_index + 1) % 3);
@@ -202,6 +209,8 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
 
     next_edges.push_back(edge1);
     next_edges.push_back(edge2);
+
+    std::cout << "3" << std::endl;
 
     return next_edges;
 }

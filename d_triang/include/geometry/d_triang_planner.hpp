@@ -52,7 +52,8 @@ public:
     // */
     // std::pair<Edge, Edge> expand(const Edge& input_edge);
 
-    void expand(Edge start);
+    std::vector<std::vector<Point_2>> expand(Edge start);
+    
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
 
 
