@@ -15,7 +15,7 @@ Looking ahead, there are plans to enhance the simulator with advanced physics an
 
 ## Launch
 
-The digram illustrates the hierarchy of launch files and xacro for robot description. To launch the Gazebo Race Track environment: `small_track.launch`
+The digram illustrates the hierarchy of launch files and xacro for robot description. To launch the Gazebo Race Track environment: `roslaunch utsma small_track.launch`
 
 <p align="center">
   <img height="300" alt="Gazebo Environment Image" src="wiki/image/launch_hierarchy.png">
@@ -26,6 +26,14 @@ The digram illustrates the hierarchy of launch files and xacro for robot descrip
 `gazebo_cone_ground_truth`
 
 `gazebo_race_car_model`
+
+## Dependencies
+
+`Ubuntu 20.04 & ROS Noetic`
+
+[`ackermann_msgs`](https://github.com/ros-drivers/ackermann_msgs) - branch master
+
+[`eufs_msgs`](https://gitlab.com/eufs/eufs_msgs/-/tree/ros1?ref_type=heads) - branch ros1
 
 ## External Links
 
