@@ -119,10 +119,13 @@ void PlotWidget::set_up(){
     // Scale 
     if (_x_max - _x_min > _y_max - _y_min){
         _scale = width() / (_x_max - _x_min);
-        std::cout << "Scaled by width" << std::endl;
+        // std::cout << "Scaled by width" << std::endl;
     }
-    else 
+    else {
         _scale = 900 / (_y_max - _y_min);
+        // std::cout << "Scaled by height" << std::endl;
+    }
+        
 
 
     // Scale points to fit within the axis limits

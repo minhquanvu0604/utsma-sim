@@ -144,19 +144,20 @@ add_library(d_triang_planner src/geometry/d_triang_planner.cpp)
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/d_triang_node.cpp)
 
-add_executable(geometry_tests
-    test/geometry/get_next_edges_test.cpp
-    # Add other test source files here
-)
-set_target_properties(geometry_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+add_executable(get_next_edges_test test/geometry/get_next_edges_test.cpp)
+add_executable(print_test test/geometry/print_test.cpp)
+
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
-
+set_target_properties(get_next_edges_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set_target_properties(print_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -167,7 +168,8 @@ set_target_properties(geometry_tests PROPERTIES
 #   ${catkin_LIBRARIES}
 # )
 
-target_link_libraries(geometry_tests d_triang_planner ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} gtest_main pthread)
+target_link_libraries(get_next_edges_test d_triang_planner ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} gtest_main pthread)
+target_link_libraries(print_test d_triang_planner ${GMP_LIBRARIES} ${MPFR_LIBRARIES} pthread)
 
 
 #############

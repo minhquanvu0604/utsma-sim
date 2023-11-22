@@ -202,15 +202,23 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
     
     std::cout << "2" << std::endl;
 
+    // Debuggin
+    print_face_vertices(new_face);
+    // std::cout << "current_edge.first: " << current_edge.first << std::endl;
+
+
     // The two other edges of the new face
     int new_face_index = new_face->index(current_edge.first);
+    std::cout << "3" << std::endl;
+
     Edge edge1(new_face, (new_face_index + 1) % 3);
     Edge edge2(new_face, (new_face_index + 2) % 3);
+    std::cout << "4" << std::endl;
 
     next_edges.push_back(edge1);
     next_edges.push_back(edge2);
 
-    std::cout << "3" << std::endl;
+    std::cout << "" << std::endl;
 
     return next_edges;
 }
@@ -224,4 +232,18 @@ std::vector<Point_2> DTriangPlanner::edge_to_point(const std::vector<Edge>& path
         points.push_back(CGAL::midpoint(p1, p2));
     }
     return points;
+}
+
+
+// TESTING FUNCTION 
+void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face) {
+    if (!face->is_valid()) {
+        std::cerr << "Invalid face handle." << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        Point_2 vertex = face->vertex(i)->point();
+        std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
+    }
 }

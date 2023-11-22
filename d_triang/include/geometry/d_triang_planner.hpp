@@ -23,6 +23,38 @@
 // typedef DT::Node Node;
 typedef DT::Pose Pose;
 
+
+/**
+ * @brief Base class for path planners
+ * 
+ * CONTRACT
+ *      INPUT : A list of cones to be used for planning at that instance
+ *      OUTPUT : A path
+ *          ---- Find a good data structure for them ----
+ *      BEHAVIOUR : ....
+ * 
+ * ANALYSIS
+ *      Compromise the computer vision section
+ *          Missing cones
+ *          Incorrect color
+ * 
+ *      Loss function : based on compromisation of vision 
+ *          Color
+ *          Cone lining up in a reasonable curve
+ *          Path is of reasonable curve
+ *          Distance between consecutive cones
+ *          Have cones on both side
+ * 
+ * TO RESEARCH
+ *      How to refine the path certainty other time
+ *      Metrics for performance evaluation
+ *      The path planner takes input from SLAM, but still stores meaningful
+ *          data itself regarding past path
+ * 
+ * NOTE 
+ *      The path always stems from the car body
+ * 
+ */
 class DTriangPlanner {
 
 public:
@@ -67,6 +99,8 @@ protected:
 private:
     std::vector<Point_2> edge_to_point(const std::vector<Edge>& path);
 
+    // Testing function 
+    void print_face_vertices(DelaunayTriangulation::Face_handle face);
 
 };
 

@@ -88,7 +88,7 @@ protected:
 //     EXPECT_EQ(2, next_edges.size());
 // }
 
-TEST_F(DTriangPlannerTest, GetNextEdgesForFirstEdge) {
+TEST_F(DTriangPlannerTest, GetNextEdges1) {
 
     Edge starting_edge = get_edge(Point_2(15.3254, -5.44316), Point_2(27.2126, -3.01572));
     Edge previous_edge = get_edge(Point_2(15.3254, -5.44316), Point_2(18.8647, 2.8406));
@@ -98,6 +98,7 @@ TEST_F(DTriangPlannerTest, GetNextEdgesForFirstEdge) {
 
     // Check the number of next edges
     EXPECT_EQ(2, next_edges.size());
+
 
     int true_time = 0; 
     for (auto next_edge : next_edges){
@@ -110,8 +111,57 @@ TEST_F(DTriangPlannerTest, GetNextEdgesForFirstEdge) {
         print_edge_vertices(next_edge);
 
     }
-
     EXPECT_EQ(2, true_time);
 }
 
+TEST_F(DTriangPlannerTest, GetNextEdges2) {
 
+    Edge starting_edge = get_edge(Point_2(27.2126, -3.01572), Point_2(19.8133, -10.0369));
+    Edge previous_edge = get_edge(Point_2(27.2126, -3.01572), Point_2(15.3254, -5.44316));
+    
+    // Call the function to test
+    std::vector<Edge> next_edges = planner.get_next_edges(starting_edge, previous_edge);
+
+    // Check the number of next edges
+    EXPECT_EQ(2, next_edges.size());
+
+
+    int true_time = 0; 
+    for (auto next_edge : next_edges){
+        bool one = are_points_vertices_of_edge(next_edge, Point_2(29.0814, -14.024), Point_2(19.8133, -10.0369));
+        bool two = are_points_vertices_of_edge(next_edge, Point_2(27.2126, -3.01572), Point_2(29.0814, -14.024));
+        if (one || two)
+            true_time++;
+
+        // Print out
+        print_edge_vertices(next_edge);
+
+    }
+    EXPECT_EQ(2, true_time);
+}
+
+TEST_F(DTriangPlannerTest, GetNextEdges3) {
+    
+    Edge starting_edge = get_edge(Point_2(27.2126, -3.01572), Point_2(19.8133, -10.0369));
+    Edge previous_edge = get_edge(Point_2(29.0814, -14.024), Point_2(19.8133, -10.0369));
+    
+    
+    // Call the function to test
+    std::vector<Edge> next_edges = planner.get_next_edges(starting_edge, previous_edge);
+
+    // Check the number of next edges
+    EXPECT_EQ(2, next_edges.size());
+
+    int true_time = 0; 
+    for (auto next_edge : next_edges){
+        bool one = are_points_vertices_of_edge(next_edge, Point_2(15.3254, -5.44316), Point_2(19.8133, -10.0369));
+        bool two = are_points_vertices_of_edge(next_edge, Point_2(27.2126, -3.01572), Point_2(15.3254, -5.44316));
+        if (one || two)
+            true_time++;
+
+        // Print out
+        print_edge_vertices(next_edge);
+
+    }
+    EXPECT_EQ(2, true_time);
+}
