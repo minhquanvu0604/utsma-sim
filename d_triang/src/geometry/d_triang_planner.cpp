@@ -84,7 +84,7 @@ Edge DTriangPlanner::triangulate(){
 /*
  * Expand all the possible paths in a bread-first fashion
 */
-std::vector<std::vector<Point_2>> DTriangPlanner::expand(Edge start) {
+void DTriangPlanner::expand(Edge start) {
     
     // All the possible paths found  
     std::vector<std::vector<Point_2>> paths;
@@ -125,7 +125,7 @@ std::vector<std::vector<Point_2>> DTriangPlanner::expand(Edge start) {
         }
     }
 
-    return paths;
+    // return paths;
 }
 
 
@@ -151,10 +151,7 @@ std::vector<std::vector<Point_2>> DTriangPlanner::expand(Edge start) {
 //     }
 
 //     // Connecting mid points
-//     // NOTE - EDGE:
-//     // ---nearest_edge.first: This is a Face_handle pointing to one of the faces (triangle) adjacent to the edge. 
-//     // ---nearest_edge.second: This is an integer (0, 1, or 2) that specifies which edge of the triangle 
-//     // (nearest_edge.first) we are referring to. It helps to identify the exact edge within the triangle.
+
     
 //     // Find 2 vertices that are not the vertex opposite to the edge
 //     Point_2 p1 = input_edge.first->vertex((input_edge.second + 1) % 3)->point();
@@ -175,50 +172,53 @@ std::vector<std::vector<Point_2>> DTriangPlanner::expand(Edge start) {
  * Returns empty vector means the path meets the dead end
  * 
  * If the edge is a starting position of the path, previous_edge will be created by the defautl contructor
+ * 
+ * Both edge must refer to the same face (current_edge.first == previous_edge.first)
+ * 
+ * Returns 3 edges, the first one is the current_edge with respect to new _face
+ * The two other edges are others of the new_face
 */
 std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previous_edge) {
     
     std::vector<Edge> next_edges;
 
-    // Find the opposite face of the current edge
-    DelaunayTriangulation::Face_handle new_face = current_edge.first;
 
-    // Logic check - Recognise first edge
+    // Recognise first edge
     if (previous_edge.first == DelaunayTriangulation::Face_handle()) {
         std::cout << "First edge" << std::endl;
+
+        DelaunayTriangulation::Face_handle new_face = current_edge.first;
+        if (_dt.is_infinite(new_face)){
+            // new_face = current_edge.first->neighbor(current_edge.second);
+            throw std::runtime_error("Infinite face from first edge");
+        }
+        Edge edge0(new_face, current_edge.second);
+        Edge edge1(new_face, (current_edge.second + 1) % 3);
+        Edge edge2(new_face, (current_edge.second + 2) % 3);
+
+        next_edges.push_back(edge0);
+        next_edges.push_back(edge1);
+        next_edges.push_back(edge2);
+
+        return next_edges;
     }
 
-    // The new face must not contain the previous edge
-    // The function is assumed to be called with finite edges, so new_face is hence finite face
-    // if (new_face == previous_edge.first || new_face == previous_edge.first->neighbor(previous_edge.second) || _dt.is_infinite(new_face))
-    if (new_face == previous_edge.first || new_face == previous_edge.first->neighbor(previous_edge.second) || _dt.is_infinite(new_face))
-        new_face = current_edge.first->neighbor(current_edge.second);
+    // The previous face is the one that contains both current_edge and previous_edge
+    DelaunayTriangulation::Face_handle previous_face = current_edge.first; // (current_edge.first == previous_edge.first)
+    DelaunayTriangulation::Face_handle new_face = previous_face->neighbor(current_edge.second);
+    // // Debugging
+    // std::cout << "Print new_face vertices" << std::endl;
+    // print_face_vertices(new_face);
 
-    std::cout << "1" << std::endl;
+    int new_face_edge_index = new_face->index(previous_face);
 
-    // Logic check - The new face should be finite 
-    if (_dt.is_infinite(new_face)) 
-        throw std::runtime_error("The new face is infinite - should not happen");
-    
-    std::cout << "2" << std::endl;
+    Edge edge0(new_face, new_face_edge_index);
+    Edge edge1(new_face, (new_face_edge_index + 1) % 3);
+    Edge edge2(new_face, (new_face_edge_index + 2) % 3);
 
-    // Debuggin
-    print_face_vertices(new_face);
-    // std::cout << "current_edge.first: " << current_edge.first << std::endl;
-
-
-    // The two other edges of the new face
-    int new_face_index = new_face->index(current_edge.first);
-    std::cout << "3" << std::endl;
-
-    Edge edge1(new_face, (new_face_index + 1) % 3);
-    Edge edge2(new_face, (new_face_index + 2) % 3);
-    std::cout << "4" << std::endl;
-
+    next_edges.push_back(edge0);
     next_edges.push_back(edge1);
     next_edges.push_back(edge2);
-
-    std::cout << "" << std::endl;
 
     return next_edges;
 }
@@ -246,4 +246,18 @@ void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face
         Point_2 vertex = face->vertex(i)->point();
         std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
     }
+}
+
+bool DTriangPlanner::are_edges_equivalent(const Edge& edge1, const Edge& edge2) {
+    Point_2 p1_edge1 = _dt.segment(edge1).source();
+    Point_2 p2_edge1 = _dt.segment(edge1).target();
+
+    Point_2 p1_edge2 = _dt.segment(edge2).source();
+    Point_2 p2_edge2 = _dt.segment(edge2).target();
+
+    // Ensure consistent ordering of points
+    if (p1_edge1 > p2_edge1) std::swap(p1_edge1, p2_edge1);
+    if (p1_edge2 > p2_edge2) std::swap(p1_edge2, p2_edge2);
+
+    return (p1_edge1 == p1_edge2) && (p2_edge1 == p2_edge2);
 }

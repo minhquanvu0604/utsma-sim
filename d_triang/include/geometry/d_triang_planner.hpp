@@ -84,7 +84,7 @@ public:
     // */
     // std::pair<Edge, Edge> expand(const Edge& input_edge);
 
-    std::vector<std::vector<Point_2>> expand(Edge start);
+    void expand(Edge start);
     
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
 
@@ -98,6 +98,8 @@ protected:
 
 private:
     std::vector<Point_2> edge_to_point(const std::vector<Edge>& path);
+    bool are_edges_equivalent(const Edge& edge1, const Edge& edge);
+
 
     // Testing function 
     void print_face_vertices(DelaunayTriangulation::Face_handle face);

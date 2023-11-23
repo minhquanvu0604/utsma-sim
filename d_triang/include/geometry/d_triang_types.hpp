@@ -10,6 +10,7 @@ typedef Kernel::Point_2 Point_2;
 typedef CGAL::Delaunay_triangulation_2<Kernel> DelaunayTriangulation;
 typedef DelaunayTriangulation::Edge Edge;
 typedef DelaunayTriangulation::Edge_circulator Edge_circulator;
+typedef CGAL::Segment_2<Kernel> Segment;
 // DelaunayTriangulation::Face_handle Face_handle; // somehow doesn't work
 
 namespace DT{

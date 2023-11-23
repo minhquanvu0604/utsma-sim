@@ -32,3 +32,9 @@ In short, while it's technically possible to provide a direct edge retrieval fun
 
 
 Traversing the adjacency in CGAL's Delaunay Triangulation effectively often involves using circulators and iterators provided by CGAL. These tools are designed to navigate through the vertices, edges, and faces of the triangulation. Here are some common ways to traverse the triangulation
+
+
+NOTE - EDGE:
+---nearest_edge.first: This is a Face_handle pointing to one of the faces (triangle) adjacent to the edge. 
+---nearest_edge.second: This is an integer (0, 1, or 2) that specifies which edge of the triangle (nearest_edge.first) we are referring to. It helps to identify the exact edge within the triangle.
+This is due to the fact that the triangulation is built upon topological relations, not just geometric ones.
