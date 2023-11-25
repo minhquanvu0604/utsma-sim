@@ -1,4 +1,5 @@
 #include "d_triang_planner.hpp"
+#include <cmath>
 
 // typedef CGAL::Delaunay_triangulation_2<Kernel> DelaunayTriangulation;
 // typedef DelaunayTriangulation::Edge_circulator Edge_circulator;
@@ -14,11 +15,11 @@ void DTriangPlanner::plan(){
 
 
 
-
 }
 
 
 void DTriangPlanner::set_cones(std::vector<Point_2> points_local){
+        _points_local.clear();
         _points_local = points_local;
     }
 
@@ -83,46 +84,80 @@ Edge DTriangPlanner::triangulate(){
 
 /*
  * Expand all the possible paths in a bread-first fashion
+ * 
+ * NOTE: need to confirm that start_edge is not infinite 
+
 */
-void DTriangPlanner::expand(Edge start) {
-    
-    // All the possible paths found  
-    std::vector<std::vector<Point_2>> paths;
+void DTriangPlanner::expand(Edge start_edge) {
 
-    // A path is represented as a vector of Edge
     // A queue to store the instantaneous traversing progress 
-    std::queue<std::vector<Edge>> queue;
-    queue.push({start});
+    // Each has 2 edges represents a state of traverse progress
+    // They represent the previous and current edge respectively
+    std::deque<DT::TraverseState> traverse_progress;
 
-    while (!queue.empty()) {
+    
 
-        // The current path in the traversing progress
-        std::vector<Edge> current_path = queue.front();
-        queue.pop();
+    DT::TraverseState initial_state;
+    initial_state.node_ptr = std::make_shared<DT::Node>(DT::Pose(0, 0, 0));
 
-        // The current leaf of that path is the last edge
-        Edge last_edge = current_path.back();
-        // If the current path has only the starting edge, use default constructor for second to last edge
-        Edge second_last_edge = current_path.size() > 1 ? current_path[current_path.size() - 2] : Edge(); 
+    initial_state.current_edge = start_edge;
+    initial_state.previous_edge = Edge();
+
+    traverse_progress.push_back(initial_state);
+
+
+
+    while (!traverse_progress.empty()) {
+
+        DT::TraverseState current_state = traverse_progress.front();
+        traverse_progress.pop_front();
         
-        // Expand on the last edge
-        std::vector<Edge> next_edges = get_next_edges(last_edge, second_last_edge);
+        // Expand on the last state
+        std::vector<Edge> next_edges = get_next_edges(current_state.current_edge, current_state.previous_edge);
+        std::shared_ptr<DT::Node> last_node_ptr = current_state.node_ptr;
+        Edge& current_new_edge = next_edges.at(0);
 
-        if (next_edges.empty()) {
-            // Convert the dead-end path to points and store it
-            std::vector<Point_2> path_pts = edge_to_point(current_path);
-            paths.push_back(path_pts);    
-        } 
-        else {
-            // Extend the current path with each of the next edges
-            for (const Edge& next_edge : next_edges) {
-                // if (std::find(current_path.begin(), current_path.end(), next_edge) == current_path.end()) {
-                std::vector<Edge> new_path = current_path;
-                new_path.push_back(next_edge);
-                queue.push(new_path); // Push the extended path for further exploration
-                // }
+        // Examine 2 edges
+        for (int i = 1; i < 3; i++){
+
+            Edge& next_new_edge = next_edges.at(i);
+            Point_2 midpoint = get_midpoint_of_edge(next_new_edge);
+            
+            double midpoint_angle = compute_orientation(midpoint, last_node_ptr->pose.position);
+            double angle_diff = abs(normalize(last_node_ptr->pose.yaw - midpoint_angle));
+
+            std::cout << "Edge --" << i << "--" << std::endl;
+            std::cout << "Current point: " << midpoint << std::endl;
+            std::cout << "Previous point: " << last_node_ptr->pose.position << std::endl;
+            std::cout << "Angle diff: " << angle_diff << std::endl; 
+
+            // Validating condition to accecpt the next node 
+            if (abs(angle_diff) > M_PI/6){
+                std::cout << "Rejected" << std::endl;
+                continue;
+            }
+
+
+            // Confirmed, add to state
+            // Create new node, the node is created here and only here
+            std::shared_ptr<DT::Node> new_node_ptr = std::make_shared<DT::Node>(DT::Pose(midpoint, midpoint_angle));
+            // Connect this node to last node
+            new_node_ptr->parent_ptr = last_node_ptr;
+            last_node_ptr->children_ptrs.push_back(new_node_ptr);
+
+
+            // If the new edge is not inifinite, add the new state
+            if (!_dt.is_infinite(next_new_edge)){
+                DT::TraverseState new_state(new_node_ptr, next_new_edge, current_new_edge);
+                traverse_progress.push_back(new_state);
+            }
+            // If boundary edge, finish the tree             
+            else {
+                std::vector<Point_2> path = backtrack_path(new_node_ptr);
+                _paths.push_back(path);
             }
         }
+
     }
 
     // return paths;
@@ -165,6 +200,8 @@ void DTriangPlanner::expand(Edge start) {
 // }
 
 
+
+
 // UTILITY FUNCTIONS //
 
 /*
@@ -181,7 +218,6 @@ void DTriangPlanner::expand(Edge start) {
 std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previous_edge) {
     
     std::vector<Edge> next_edges;
-
 
     // Recognise first edge
     if (previous_edge.first == DelaunayTriangulation::Face_handle()) {
@@ -224,16 +260,6 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
 }
 
 
-std::vector<Point_2> DTriangPlanner::edge_to_point(const std::vector<Edge>& path) {
-    std::vector<Point_2> points;
-    for (const Edge& edge : path) {
-        Point_2 p1 = edge.first->vertex((edge.second + 1) % 3)->point();
-        Point_2 p2 = edge.first->vertex((edge.second + 2) % 3)->point();
-        points.push_back(CGAL::midpoint(p1, p2));
-    }
-    return points;
-}
-
 
 // TESTING FUNCTION 
 void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face) {
@@ -248,16 +274,61 @@ void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face
     }
 }
 
-bool DTriangPlanner::are_edges_equivalent(const Edge& edge1, const Edge& edge2) {
-    Point_2 p1_edge1 = _dt.segment(edge1).source();
-    Point_2 p2_edge1 = _dt.segment(edge1).target();
+Point_2 DTriangPlanner::get_midpoint_of_edge(const Edge& edge) {
+    Point_2 p1 = edge.first->vertex((edge.second + 1) % 3)->point();
+    Point_2 p2 = edge.first->vertex((edge.second + 2) % 3)->point();
+    return CGAL::midpoint(p1, p2);
+}
 
-    Point_2 p1_edge2 = _dt.segment(edge2).source();
-    Point_2 p2_edge2 = _dt.segment(edge2).target();
+// double DTriangPlanner::angle_difference(const DT::Pose& car_pose, const Point_2& point) {
+//     // Convert CGAL::Lazy_exact_nt to double for atan2
+//     double dx = CGAL::to_double(point.x()) - CGAL::to_double(car_pose.position.x());
+//     double dy = CGAL::to_double(point.y()) - CGAL::to_double(car_pose.position.y());
 
-    // Ensure consistent ordering of points
-    if (p1_edge1 > p2_edge1) std::swap(p1_edge1, p2_edge1);
-    if (p1_edge2 > p2_edge2) std::swap(p1_edge2, p2_edge2);
+//     // Calculate angle from car to point
+//     double angle_to_point = std::atan2(dy, dx);
 
-    return (p1_edge1 == p1_edge2) && (p2_edge1 == p2_edge2);
+//     // Calculate the angle difference
+//     double angle_diff = angle_to_point - car_pose.yaw;
+
+//     // Normalize the angle to be within -π to π
+//     while (angle_diff > M_PI) angle_diff -= 2 * M_PI;
+//     while (angle_diff < -M_PI) angle_diff += 2 * M_PI;
+
+//     return angle_diff;
+// }
+
+double DTriangPlanner::compute_orientation(const Point_2& p1, const Point_2& p2) {
+    double deltaX = CGAL::to_double(p2.x()) - CGAL::to_double(p1.x());
+    double deltaY = CGAL::to_double(p2.y()) - CGAL::to_double(p1.y());
+    return std::atan2(deltaY, deltaX); // Returns angle in radians
+}
+
+double DTriangPlanner::normalize(double angle){
+
+    if (angle > M_PI) {
+        angle -= 2 * M_PI;
+    } else if (angle < -M_PI) {
+        angle += 2 * M_PI;
+    }    
+    return angle;
+}
+
+std::vector<Point_2> DTriangPlanner::backtrack_path(const std::shared_ptr<DT::Node>& leaf_node) {
+    std::vector<Point_2> path;
+    std::shared_ptr<DT::Node> current_node = leaf_node;
+
+    while (current_node) {
+        path.push_back(current_node->pose.position);
+        current_node = current_node->parent_ptr;
+    }
+
+    // Reverse the path to get it from root to leaf
+    std::reverse(path.begin(), path.end());
+
+    return path;
+}
+
+DelaunayTriangulation* DTriangPlanner::get_triangulation_ptr() {
+    return &_dt;
 }

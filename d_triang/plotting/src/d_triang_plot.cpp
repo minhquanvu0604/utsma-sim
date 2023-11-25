@@ -84,8 +84,8 @@ void DTriangPlot::read_cone_config(){
     // Convert to car's frame
     for (Point_2 point_global :_points_global){
         Point_2 p_local = transform_to_car_frame(point_global,car_x,car_y,car_yaw);
-        // // Print out to write unit test
-        // std::cout << p_local.x() << " , " << p_local.y() << std::endl;
+        // Print out to write unit test
+        std::cout << p_local.x() << " , " << p_local.y() << std::endl;
         _local_global_map[p_local] = point_global;
         _points_local.push_back(p_local);
     }

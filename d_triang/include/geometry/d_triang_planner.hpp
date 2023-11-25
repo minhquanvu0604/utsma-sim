@@ -21,7 +21,6 @@
 // typedef DelaunayTriangulation::Edge_circulator Edge_circulator;
 
 // typedef DT::Node Node;
-typedef DT::Pose Pose;
 
 
 /**
@@ -88,18 +87,24 @@ public:
     
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
 
+    DelaunayTriangulation* get_triangulation_ptr();
 
 
 protected:
     DelaunayTriangulation _dt;
     std::vector<Point_2> _points_local;
-
-    // std::vector<Node> _node_list;
+    
+    // All the possible paths found, each vector of Point_2 represents a path
+    std::vector<std::vector<Point_2>> _paths;
 
 private:
-    std::vector<Point_2> edge_to_point(const std::vector<Edge>& path);
-    bool are_edges_equivalent(const Edge& edge1, const Edge& edge);
+    Point_2 get_midpoint_of_edge(const Edge& edge);
+    // double angle_difference(const DT::Pose& last_node_pose, const Point_2& new_midpoint);       
+    double compute_orientation(const Point_2& p1, const Point_2& p2);
+    std::vector<Point_2> backtrack_path(const std::shared_ptr<DT::Node>& leaf_node);
 
+    // Normalize the angle difference to the range (-π, π)
+    double normalize(double angle); // static?
 
     // Testing function 
     void print_face_vertices(DelaunayTriangulation::Face_handle face);
