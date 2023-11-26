@@ -18,10 +18,13 @@
 PlotWidget::PlotWidget(
     const std::vector<Point_2>& points_global, 
     const std::vector<Point_2>& points_local, 
-    const std::vector<std::pair<Point_2, Point_2>>& edges, 
+    const std::vector<std::pair<Point_2, Point_2>>& edges,
+    const std::vector<std::pair<Point_2, Point_2>>& other_paths, 
+    const std::vector<std::pair<Point_2, Point_2>>& best_path,
     QWidget* parent
     )
-    : QWidget(parent), _points_global{points_global}, _points_local{points_local}, _edges{edges}{}
+    : QWidget{parent}, _points_global{points_global}, _points_local{points_local}, 
+        _edges{edges}, _other_paths{other_paths}, _best_path{best_path} {}
 
 
 void PlotWidget::paintEvent(QPaintEvent *) {
@@ -67,6 +70,25 @@ void PlotWidget::paintEvent(QPaintEvent *) {
     for (const auto& edge : _plot_location_edges){
         painter.drawLine(edge.first, edge.second);
     }
+
+    // Plot the other paths
+    for (const auto& path_segment : _plot_location_other_paths){
+        QPen pen;
+        pen.setWidth(5); // width in pixels
+        pen.setColor(QColor(255, 0, 0, 100)); 
+        painter.setPen(pen);
+        painter.drawLine(path_segment.first, path_segment.second);
+    }
+
+    // Plot the best path
+    for (const auto& path_segment : _plot_location_best_path){
+        QPen pen;
+        pen.setWidth(10); // width in pixels
+        pen.setColor(QColor(0, 255, 0, 100)); 
+        painter.setPen(pen);
+        painter.drawLine(path_segment.first, path_segment.second);
+    }
+
 
 
 }
@@ -130,15 +152,15 @@ void PlotWidget::set_up(){
         tr_pts.push_back(Point_2(mirrored_x, y));
     }
     
-
     update_bounds(tr_pts);
     
-
     // Convert cone points to Qt's frame and scale the widget window
     scale_points(tr_pts);
 
-    // Convert the edge to Qt's frame
-    scale_segments();
+    // Convert the segments to Qt's frame
+    _plot_location_edges = scale_segments(_edges);
+    _plot_location_other_paths = scale_segments(_other_paths);
+    _plot_location_best_path = scale_segments(_best_path);
 }
 
 
@@ -154,10 +176,11 @@ void PlotWidget::scale_points(const std::vector<Point_2>& tr_pts){
 }
 
 
-void PlotWidget::scale_segments(){
+std::vector<std::pair<QPointF, QPointF>> PlotWidget::scale_segments(std::vector<std::pair<Point_2, Point_2>> segments){
+
+    std::vector<std::pair<QPointF, QPointF>> plot_location_segments;
     // Calculate plot location for edges 
-    for (const auto& edge : _edges){
-        
+    for (const auto& edge : segments){
         // First point
         double mirrored_x1 = -CGAL::to_double(change_frame(edge.first).x());
         double y1 = CGAL::to_double(change_frame(edge.first).y());
@@ -175,6 +198,7 @@ void PlotWidget::scale_segments(){
         QPointF end(x_2, y_2);
 
         std::pair<QPointF, QPointF> edge_QPointF = std::make_pair(start, end);
-        _plot_location_edges.push_back(edge_QPointF);
+        plot_location_segments.push_back(edge_QPointF);
     }
+    return plot_location_segments;
 }

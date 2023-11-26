@@ -32,12 +32,22 @@ Point_2 DTriangPlot::transform_to_car_frame(const Point_2& global_pt, double car
 void DTriangPlot::plot(){
     
     read_cone_config();
-    Edge first_edge = triangulate();
+    plan();
     update_global_points();
-    std::vector<std::pair<Point_2, Point_2>> edges = get_edges();
+    std::vector<std::pair<Point_2, Point_2>> edges = get_edges_for_plotting();
+
+    std::vector<std::vector<Point_2>> other_paths = get_other_paths();
+    std::vector<std::pair<Point_2, Point_2>> other_paths_for_plotting;
+    for (auto& other_path : other_paths){
+        std::vector<std::pair<Point_2, Point_2>> path_for_plotting = get_path_for_plotting(other_path);
+        other_paths_for_plotting.insert(other_paths_for_plotting.end(), path_for_plotting.begin(), path_for_plotting.end());
+    }
+
+    std::vector<Point_2> best_path = get_best_path();
+    std::vector<std::pair<Point_2, Point_2>> best_path_for_plotting = get_path_for_plotting(best_path);
                                                 
     // PlotWidget widget(_points_global, _points_local, edges);
-    _widget = std::make_shared<PlotWidget>(_points_global, _points_local, edges);    
+    _widget = std::make_shared<PlotWidget>(_points_global, _points_local, edges, other_paths_for_plotting, best_path_for_plotting);    
     _widget->resize(800, 900); 
     _widget->show();
 }
@@ -100,12 +110,30 @@ void DTriangPlot::update_global_points(){
     }
 }
 
-std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_edges(){
+std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_edges_for_plotting(){
     // Get the edges
     std::vector<std::pair<Point_2, Point_2>> edges;
     for (auto it = _dt.finite_edges_begin(); it != _dt.finite_edges_end(); ++it) {
         Kernel::Segment_2 segment = _dt.segment(it);
         edges.emplace_back(segment.start(), segment.end());
+    }
+    return edges;
+}
+
+// std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_other_paths_for_plotting(std::vector<std::vector<Point_2>> paths){
+//     std::vector<std::pair<Point_2, Point_2>> segments;
+//     for (const auto& path : paths) {
+//         for (size_t i = 0; i < path.size() - 1; ++i) {
+//             segments.emplace_back(path[i], path[i + 1]);
+//         }
+//     }
+//     return segments;
+// }
+
+std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_path_for_plotting(std::vector<Point_2> path){
+    std::vector<std::pair<Point_2, Point_2>> edges;
+    for (size_t i = 0; i < path.size() - 1; ++i) {
+        edges.push_back(std::make_pair(path[i], path[i + 1]));
     }
     return edges;
 }

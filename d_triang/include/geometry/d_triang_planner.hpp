@@ -32,6 +32,9 @@
  *          ---- Find a good data structure for them ----
  *      BEHAVIOUR : ....
  * 
+ * USAGE
+ *      set_cones() -> plan() -> get_best_path()/other getters
+ * 
  * ANALYSIS
  *      Compromise the computer vision section
  *          Missing cones
@@ -78,13 +81,25 @@ public:
 
 
     /*
-    * Expand all the possible paths in a bread-first fashion
+     * Expand all the possible paths in a bread-first fashion
     */
     void expand(Edge start);
     
-    std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
-
+    /*
+     * Get a list of complete paths
+    */    
     std::vector<std::vector<Point_2>> get_paths();
+
+    /*
+     * Get the best path from all complete paths, which is meant to be the chosen path 
+     * for the car to follow
+    */
+    std::vector<Point_2> get_best_path();
+
+    /*
+    * Get other complete paths besides the best one
+    */
+    std::vector<std::vector<Point_2>> get_other_paths();
 
     /*
      * For testing
@@ -93,15 +108,23 @@ public:
 
 
 protected:
+
     DelaunayTriangulation _dt;
     std::vector<Point_2> _points_local;
     
     // All the possible paths found, each vector of Point_2 represents a path
     std::vector<std::vector<Point_2>> _paths;
+    std::vector<Point_2> _best_path;
+    std::vector<std::vector<Point_2>> _other_paths;
+
 
 private:
+
+    std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
+
+    void choose_best_path();
+
     Point_2 get_midpoint_of_edge(const Edge& edge);
-    // double angle_difference(const DT::Pose& last_node_pose, const Point_2& new_midpoint);       
     
     /*
     * p1 is current node, p2 is next node

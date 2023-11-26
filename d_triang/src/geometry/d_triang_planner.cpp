@@ -2,12 +2,11 @@
 #include <cmath>
 
 
-// void DTriangPlanner::plan(){
-
-//     Edge nearest_edge = triangulate();
-
-
-// }
+void DTriangPlanner::plan(){
+    Edge first_edge = triangulate();
+    expand(first_edge);
+    choose_best_path();
+}
 
 
 void DTriangPlanner::set_cones(std::vector<Point_2> points_local){
@@ -156,7 +155,6 @@ void DTriangPlanner::expand(Edge start_edge) {
             last_node_ptr->children_ptrs.push_back(new_node_ptr);
 
 
-
             // Otherwise add to new state
             DT::TraverseState new_state(new_node_ptr, next_new_edge, current_new_edge);
             traverse_progress.push_back(new_state);                
@@ -229,8 +227,39 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
     return next_edges;
 }
 
+
+void DTriangPlanner::choose_best_path(){
+    int max_size = 0;
+    int index_of_longest = -1;
+
+    for (int i = 0; i < _paths.size(); ++i) {
+        if (_paths[i].size() > max_size) {
+            max_size = _paths[i].size();
+            index_of_longest = i;
+        }
+    }
+
+    if (index_of_longest != -1) {
+        _best_path = _paths[index_of_longest];
+        for (int i = 0; i < _paths.size(); ++i) {
+            if (i != index_of_longest) {
+                _other_paths.push_back(_paths[i]);
+            }
+        }
+    }
+}
+
+
 std::vector<std::vector<Point_2>> DTriangPlanner::get_paths(){
     return _paths;
+}
+
+std::vector<Point_2> DTriangPlanner::get_best_path(){
+    return _best_path;
+}
+
+std::vector<std::vector<Point_2>> DTriangPlanner::get_other_paths(){
+    return _other_paths;
 }
 
 

@@ -40,10 +40,10 @@ public:
     /*
      * Get the edges for plotting
     */
-    std::vector<std::pair<Point_2, Point_2>> get_edges();
+    std::vector<std::pair<Point_2, Point_2>> get_edges_for_plotting();
 
-    // void compute_path();
-    // void expand(std::shared_ptr<Node> current_node);
+    std::vector<std::pair<Point_2, Point_2>> get_path_for_plotting(std::vector<Point_2> path);
+
 
 
 private:

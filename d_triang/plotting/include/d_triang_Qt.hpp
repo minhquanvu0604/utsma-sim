@@ -24,14 +24,18 @@ typedef CGAL::Delaunay_triangulation_2<Kernel> DelaunayTriangulation;
  * Won't be used whatsoever when running real-time
 */
 class PlotWidget : public QWidget {
+
 public:
+
     PlotWidget(
         const std::vector<Point_2>& points_global, 
         const std::vector<Point_2>& points_local, 
-        const std::vector<std::pair<Point_2, Point_2>>& edges, 
+        const std::vector<std::pair<Point_2, Point_2>>& edges,
+        const std::vector<std::pair<Point_2, Point_2>>& other_paths, 
+        const std::vector<std::pair<Point_2, Point_2>>& best_path,
         QWidget* parent = nullptr
         );
-
+        
 private:
 
     void paintEvent(QPaintEvent *) override; 
@@ -56,7 +60,7 @@ private:
     */    
     void update_bounds(const std::vector<Point_2>& tr_pts);
 
-    void scale_segments();
+    std::vector<std::pair<QPointF, QPointF>> scale_segments(std::vector<std::pair<Point_2, Point_2>> segments);
 
     void scale_points(const std::vector<Point_2>& tr_pts);
 
@@ -65,10 +69,14 @@ private:
     std::vector<Point_2> _points_global;
     std::vector<Point_2> _points_local;
     std::vector<std::pair<Point_2, Point_2>> _edges;
+    std::vector<std::pair<Point_2, Point_2>> _other_paths;
+    std::vector<std::pair<Point_2, Point_2>> _best_path;
     
     // Geometries ready to plot
     std::vector<QPointF> _plot_location_pts;
     std::vector<std::pair<QPointF, QPointF>> _plot_location_edges;
+    std::vector<std::pair<QPointF, QPointF>> _plot_location_other_paths;
+    std::vector<std::pair<QPointF, QPointF>> _plot_location_best_path;
 
     double _x_min = std::numeric_limits<double>::max();
     double _x_max = std::numeric_limits<double>::lowest();
