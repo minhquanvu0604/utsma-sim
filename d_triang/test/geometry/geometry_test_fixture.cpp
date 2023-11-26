@@ -20,26 +20,14 @@ protected:
     virtual void SetUp() {
 
         _dt = _planner.get_triangulation_ptr();
+        std::vector<Point_2> points_local = get_cone_layout("near_steep_turn.yaml");
 
-        std::vector<Point_2> points_local;// = get_cone_layout("near_steep_turn.yaml");
-
+        // // Print out cone layout
         // for(auto p : points_local){
         //     std::cout << p << std::endl;
         // }
         // std::cout << std::endl;
 
-        // points_local.clear();
-        // Cones config from near_steep_turn.yaml, converted to car's local frame 
-        points_local.push_back(Point_2(8.14437, -4.28801));
-        points_local.push_back(Point_2(15.3254, -5.44316));
-        points_local.push_back(Point_2(19.8133, -10.0369));
-        points_local.push_back(Point_2(17.6274, -16.8421));
-        points_local.push_back(Point_2(9.23534, 5.02372));
-        points_local.push_back(Point_2(18.8647, 2.8406));
-        points_local.push_back(Point_2(27.2126, -3.01572));
-        points_local.push_back(Point_2(29.0814, -14.024));
-        
-        //dt.insert(points_local.begin(), points_local.end()); 
         _planner.set_cones(points_local);
     }
 
@@ -96,24 +84,6 @@ protected:
         return Point_2(rotated_x, rotated_y);
     }
 
-    // bool are_points_vertices_of_edge(const DelaunayTriangulation::Edge& edge, const Point_2& p1, const Point_2& p2) {
-    //     auto face = edge.first;
-
-    //     // print_face_vertices(face);
-
-    //     int i = edge.second;
-    //     Point_2 v1 = face->vertex((i + 1) % 3)->point();
-    //     Point_2 v2 = face->vertex((i + 2) % 3)->point();
-
-    //     std::cout << "p1: " << p1 << std::endl;
-    //     std::cout << "p2: " << p2 << std::endl;
-    //     std::cout << "v1: " << v1 << std::endl;
-    //     std::cout << "v2: " << v2 << std::endl;
-
-    //     // The == operator checks for exact equality of the coordinates of these points.
-    //     return ((v1 == p1 && v2 == p2) || (v1 == p2 && v2 == p1));
-    // }
-
     bool are_points_vertices_of_edge(const DelaunayTriangulation::Edge& edge, const Point_2& p1, const Point_2& p2) {
         
         double tolerance = 1e-3;
@@ -137,9 +107,7 @@ protected:
     }
 
     Face_handle find_face_with_vertices(const Point_2& v1, const Point_2& v2, const Point_2& v3) {
-        
         double tolerance = 1e-3;
-        
         for (auto fit = _dt->finite_faces_begin(); fit != _dt->finite_faces_end(); ++fit) {
             Face_handle face = fit;
             std::vector<Point_2> face_vertices = {
@@ -154,22 +122,23 @@ protected:
                 return face;
             }
         }
-
-        return nullptr; // Face not found
+        throw std::runtime_error("Face not found in the given vertices.");
+        // return nullptr; // Face not found
     }
 
     Edge get_edge_from_face_and_vertices(Face_handle face, const Point_2& v1, const Point_2& v2) {
+        double tolerance = 1e-3;
         for (int i = 0; i < 3; ++i) {
             Point_2 p1 = face->vertex((i + 1) % 3)->point(); // Vertex after i
             Point_2 p2 = face->vertex((i + 2) % 3)->point(); // Vertex after (i+1)
 
-            if ((p1 == v1 && p2 == v2) || (p1 == v2 && p2 == v1)) {
-                // std::cout << "p1 : " << p1 << std::endl;
-                // std::cout << "p2 : " << p2 << std::endl;
+            if ((is_approx_equal(p1, v1, tolerance) && is_approx_equal(p2, v2, tolerance)) || 
+                (is_approx_equal(p1, v2, tolerance) && is_approx_equal(p2, v1, tolerance))) {
+                // Found the edge with tolerance
                 return Edge(face, i);
             }
         }
-        throw std::runtime_error("Edge not found in the given face.");
+        throw std::runtime_error("Edge not found in the given face with tolerance.");
     }
 
     void print_face_vertices(DelaunayTriangulation::Face_handle face) {

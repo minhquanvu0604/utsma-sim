@@ -16,7 +16,6 @@ TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeDefaultCones) {
 TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout1) {
 
     std::vector<Point_2> points_local = get_cone_layout("straight.yaml");
-
     _planner.set_cones(points_local);
 
     Edge first_edge = _planner.triangulate();
@@ -33,7 +32,6 @@ TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout1) {
 TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout2) {
 
     std::vector<Point_2> points_local = get_cone_layout("straight_with_stretch_p.yaml");
-
     _planner.set_cones(points_local);
 
     Edge first_edge = _planner.triangulate();
@@ -50,7 +48,6 @@ TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout2) {
 TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout3) {
 
     std::vector<Point_2> points_local = get_cone_layout("straight_missing_cone.yaml");
-
     _planner.set_cones(points_local);
 
     Edge first_edge = _planner.triangulate();
@@ -67,7 +64,6 @@ TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout3) {
 TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout4) {
 
     std::vector<Point_2> points_local = get_cone_layout("slight_curve.yaml");
-
     _planner.set_cones(points_local);
 
     Edge first_edge = _planner.triangulate();
@@ -84,7 +80,6 @@ TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout4) {
 TEST_F(DTriangPlannerTestFixture, ReturnFirstEdgeConeLayout5) {
 
     std::vector<Point_2> points_local = get_cone_layout("near_steep_turn.yaml");
-
     _planner.set_cones(points_local);
 
     Edge first_edge = _planner.triangulate();

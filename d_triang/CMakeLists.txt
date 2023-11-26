@@ -150,6 +150,7 @@ add_library(geometry_test_fixture test/geometry/geometry_test_fixture.cpp)
 add_executable(get_next_edges_test test/geometry/get_next_edges_test.cpp)
 add_executable(print_test test/geometry/print_test.cpp )
 add_executable(return_first_edge_test test/geometry/return_first_edge_test.cpp)
+add_executable(expand_test test/geometry/expand_test.cpp)
 
 
 
@@ -160,10 +161,16 @@ add_executable(return_first_edge_test test/geometry/return_first_edge_test.cpp)
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 set_target_properties(get_next_edges_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
 set_target_properties(print_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
-    set_target_properties(return_first_edge_test PROPERTIES
+
+set_target_properties(return_first_edge_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+set_target_properties(expand_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -192,7 +199,11 @@ target_link_libraries(return_first_edge_test
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
 
-
+target_link_libraries(expand_test 
+    d_triang_planner 
+    geometry_test_fixture 
+    ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
+    gtest_main pthread)
 
 
 #############

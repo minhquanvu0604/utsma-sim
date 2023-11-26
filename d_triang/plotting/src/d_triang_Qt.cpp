@@ -26,22 +26,23 @@ PlotWidget::PlotWidget(
 
 void PlotWidget::paintEvent(QPaintEvent *) {
 
-    // Convert cone points to Qt's frame and scale the widget window
     set_up();
-
-    // Convert the edge to Qt's frame
-    triangulation_edge();
 
     // A QPainter object is typically created and used within the scope of a painting function like paintEvent. 
     // This is because QPainter is designed to be used only during painting operations, and its lifecycle is managed accordingly.
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);        
-    
-    // Plot the vertices
     const int vertice_R = 5;
+
+    //Plot car
+    painter.drawEllipse(_plot_location_pts.back(), vertice_R, vertice_R);
+    _plot_location_pts.pop_back();
+
+
+    // Plot cones
     for (int i = 0; i < _plot_location_pts.size(); i++){
 
-        // Plot cones
+        // Plot cone points
         painter.drawEllipse(_plot_location_pts.at(i), vertice_R, vertice_R);
         
         // Write local coordinates
@@ -58,7 +59,7 @@ void PlotWidget::paintEvent(QPaintEvent *) {
         text = QString("(%1, %2)").arg(CGAL::to_double(_points_global.at(i).x())).arg(-CGAL::to_double(_points_global.at(i).y()));
         // Adjust the text position to be above and centered over the point
         QPointF textPos_global = _plot_location_pts.at(i) - QPointF(textWidth / 2, textHeight*2 + vertice_R);
-        painter.drawText(textPos_global, text);             
+        painter.drawText(textPos_global, text);
         }
 
 
@@ -66,6 +67,8 @@ void PlotWidget::paintEvent(QPaintEvent *) {
     for (const auto& edge : _plot_location_edges){
         painter.drawLine(edge.first, edge.second);
     }
+
+
 }
 
 
@@ -96,24 +99,8 @@ void PlotWidget::update_bounds(const std::vector<Point_2>& tr_pts) {
     // Adjust bounds slightly for padding
     _x_min -= 10; _x_max += 10;
     _y_min -= 10; _y_max += 10;
-}
-
-
-void PlotWidget::set_up(){
-
-    // Location to plot the points on Qt Windows
-    std::vector<Point_2> tr_pts;
-    for (const auto& point : _points_local){
-        // Convert (x y) from Qt frame (right down) to robot frame (up left)
-        // It is a conversion from global frame (initial robot frame) to local frame (Qt frame)
-        auto tr_p = change_frame(point);
-        double mirrored_x = -CGAL::to_double(tr_p.x()); // Mirror the x-coordinate
-        double y = CGAL::to_double(tr_p.y());
-        tr_pts.push_back(Point_2(mirrored_x, y));
-    }
-
-    update_bounds(tr_pts);
-
+    
+    // Compute scale
     // NEEDS REVISION ------------------------- NNNNNNNNNN
     // std::cout << "height:  " << height() << std::endl;
     // Scale 
@@ -125,9 +112,38 @@ void PlotWidget::set_up(){
         _scale = 900 / (_y_max - _y_min);
         // std::cout << "Scaled by height" << std::endl;
     }
-        
+}
+
+void PlotWidget::set_up(){
+
+    Point_2 car_p(0,0);
+    _points_local.push_back(car_p);
+
+    // Location to plot the points on Qt Windows
+    std::vector<Point_2> tr_pts;
+    for (const auto& point : _points_local){
+        // Convert (x y) from Qt frame (right down) to robot frame (up left)
+        // It is a conversion from global frame (initial robot frame) to local frame (Qt frame)
+        auto tr_p = change_frame(point);
+        double mirrored_x = -CGAL::to_double(tr_p.x()); // Mirror the x-coordinate
+        double y = CGAL::to_double(tr_p.y());
+        tr_pts.push_back(Point_2(mirrored_x, y));
+    }
+    
+
+    update_bounds(tr_pts);
+    
+
+    // Convert cone points to Qt's frame and scale the widget window
+    scale_points(tr_pts);
+
+    // Convert the edge to Qt's frame
+    scale_segments();
+}
 
 
+void PlotWidget::scale_points(const std::vector<Point_2>& tr_pts){
+    
     // Scale points to fit within the axis limits
     for (int i = 0; i < tr_pts.size(); i++){            
         double x = (CGAL::to_double(tr_pts.at(i).x()) - _x_min) * _scale;
@@ -137,7 +153,8 @@ void PlotWidget::set_up(){
     }
 }
 
-void PlotWidget::triangulation_edge(){
+
+void PlotWidget::scale_segments(){
     // Calculate plot location for edges 
     for (const auto& edge : _edges){
         

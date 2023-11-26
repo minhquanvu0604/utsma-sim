@@ -76,17 +76,19 @@ public:
     */
     Edge triangulate();
 
-    void contruct_graph();
 
-    // /*
-    //  * Explore 2 incident edges of the current edge
-    // */
-    // std::pair<Edge, Edge> expand(const Edge& input_edge);
-
+    /*
+    * Expand all the possible paths in a bread-first fashion
+    */
     void expand(Edge start);
     
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
 
+    std::vector<std::vector<Point_2>> get_paths();
+
+    /*
+     * For testing
+    */
     DelaunayTriangulation* get_triangulation_ptr();
 
 
@@ -100,6 +102,10 @@ protected:
 private:
     Point_2 get_midpoint_of_edge(const Edge& edge);
     // double angle_difference(const DT::Pose& last_node_pose, const Point_2& new_midpoint);       
+    
+    /*
+    * p1 is current node, p2 is next node
+    */
     double compute_orientation(const Point_2& p1, const Point_2& p2);
     std::vector<Point_2> backtrack_path(const std::shared_ptr<DT::Node>& leaf_node);
 
@@ -108,6 +114,8 @@ private:
 
     // Testing function 
     void print_face_vertices(DelaunayTriangulation::Face_handle face);
+    void print_paths();
+    void print_edge_vertices(const Edge& edge);
 
 };
 

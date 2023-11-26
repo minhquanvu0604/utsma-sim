@@ -33,22 +33,32 @@ public:
         );
 
 private:
+
+    void paintEvent(QPaintEvent *) override; 
+
     /*
      * Convert (x y) from Qt frame (right down) to robot frame (up left)
      * It is a conversion from global frame (initial robot frame) to local frame (Qt frame)
+     * 
+     * change_frame() -> update_bounds() -> scale_points() -> scale_edges()
     */
+    void set_up();
+
+    /*
+     * Change frame of reference by 2D translation and rotation
+     * To be used in set_up()
+     */
     Point_2 change_frame(Point_2 pt_global_coord);
 
     /*
      * Set the min max of x and y to later make the window bounds all the points nicely
+     * Then compute the scale accordingly
     */    
     void update_bounds(const std::vector<Point_2>& tr_pts);
 
-    void paintEvent(QPaintEvent *) override; 
+    void scale_segments();
 
-    void set_up();
-
-    void triangulation_edge();
+    void scale_points(const std::vector<Point_2>& tr_pts);
 
 
     // Input geometries

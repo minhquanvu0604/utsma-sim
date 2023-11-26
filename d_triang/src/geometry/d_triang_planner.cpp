@@ -1,21 +1,13 @@
 #include "d_triang_planner.hpp"
 #include <cmath>
 
-// typedef CGAL::Delaunay_triangulation_2<Kernel> DelaunayTriangulation;
-// typedef DelaunayTriangulation::Edge_circulator Edge_circulator;
+
+// void DTriangPlanner::plan(){
+
+//     Edge nearest_edge = triangulate();
 
 
-void DTriangPlanner::plan(){
-
-    Edge nearest_edge = triangulate();
-
-
-
-
-
-
-
-}
+// }
 
 
 void DTriangPlanner::set_cones(std::vector<Point_2> points_local){
@@ -24,10 +16,8 @@ void DTriangPlanner::set_cones(std::vector<Point_2> points_local){
     }
 
 Edge DTriangPlanner::triangulate(){
-
     // Triangulation computed here
     _dt.insert(_points_local.begin(), _points_local.end()); 
-
 
     // The two nearest points are ones with smallest x
     DelaunayTriangulation::Vertex_handle smallest, second_smallest;
@@ -46,10 +36,6 @@ Edge DTriangPlanner::triangulate(){
         }
     }
             
-    // std::cout << "Two nearest points: " << std::endl;
-    // std::cout << smallest->point().x() << " , " << smallest->point().y() << std::endl;
-    // std::cout << second_smallest->point().x() << " , " << second_smallest->point().y() << std::endl;
-
     // From 2 nearest vertices, find the corresponding edge
     Edge nearest_edge;
     bool edge_found = false;
@@ -72,21 +58,12 @@ Edge DTriangPlanner::triangulate(){
     return nearest_edge;
 }
 
-
-// /*
-//  * Depth first manner
-// */
-// void DTriangPlanner::contruct_graph(){
-//     std::vector<Point_2> traversing_progress;
-
-// }
-
-
 /*
- * Expand all the possible paths in a bread-first fashion
  * 
  * NOTE: need to confirm that start_edge is not infinite 
-
+ * 
+ * POTENTIAL FEATURES
+ *      Save rejected paths -> prevent the case where the good path is rejected by the last segment
 */
 void DTriangPlanner::expand(Edge start_edge) {
 
@@ -95,17 +72,31 @@ void DTriangPlanner::expand(Edge start_edge) {
     // They represent the previous and current edge respectively
     std::deque<DT::TraverseState> traverse_progress;
 
+    std::shared_ptr<DT::Node> car_node_ptr = std::make_shared<DT::Node>(DT::Pose(0,0,0));
+
+    Point_2 first_node_midpoint = get_midpoint_of_edge(start_edge);
+    double first_node_angle_diff = compute_orientation(car_node_ptr->pose.position, first_node_midpoint);
+    first_node_angle_diff = abs(normalize(first_node_angle_diff));
     
+    std::shared_ptr<DT::Node> first_node_ptr = std::make_shared<DT::Node>(DT::Pose(first_node_midpoint, first_node_angle_diff));
 
+    // DEBUGGING
+    std::cout << "FIRST NODE: " << std::endl;
+    print_edge_vertices(start_edge);
+    std::cout << "Midpoint: " << first_node_midpoint << std::endl;
+    std::cout << "Previous point: " << car_node_ptr->pose.position << std::endl;
+    std::cout << "Angle diff: " << first_node_angle_diff << std::endl; 
+    std::cout << "=====================================" << std::endl; 
+
+    int passed = 0; // number of next nodes that pass the validating condtion
+
+    
     DT::TraverseState initial_state;
-    initial_state.node_ptr = std::make_shared<DT::Node>(DT::Pose(0, 0, 0));
-
+    initial_state.node_ptr = first_node_ptr;
     initial_state.current_edge = start_edge;
     initial_state.previous_edge = Edge();
 
     traverse_progress.push_back(initial_state);
-
-
 
     while (!traverse_progress.empty()) {
 
@@ -116,29 +107,48 @@ void DTriangPlanner::expand(Edge start_edge) {
         std::vector<Edge> next_edges = get_next_edges(current_state.current_edge, current_state.previous_edge);
         std::shared_ptr<DT::Node> last_node_ptr = current_state.node_ptr;
         Edge& current_new_edge = next_edges.at(0);
+        
+        std::cout << "Current point: " << last_node_ptr->pose.position << std::endl;
+        std::cout << "Current edge: ";
+        print_edge_vertices(current_new_edge);
+        
+        std::cout << "-----------------------------------" << std::endl;
 
         // Examine 2 edges
         for (int i = 1; i < 3; i++){
 
             Edge& next_new_edge = next_edges.at(i);
-            Point_2 midpoint = get_midpoint_of_edge(next_new_edge);
-            
-            double midpoint_angle = compute_orientation(midpoint, last_node_ptr->pose.position);
+
+            // If boundary edge, finish the tree 
+            if (_dt.is_infinite(next_new_edge)){                       
+                std::cout << "END PATH" << std::endl;
+                std::vector<Point_2> path = backtrack_path(last_node_ptr);
+                _paths.push_back(path);
+                
+                break; // Break otherwise the same path will be pushed back twice
+            }
+
+            Point_2 midpoint = get_midpoint_of_edge(next_new_edge);     
+            double midpoint_angle = compute_orientation(last_node_ptr->pose.position, midpoint);
             double angle_diff = abs(normalize(last_node_ptr->pose.yaw - midpoint_angle));
 
-            std::cout << "Edge --" << i << "--" << std::endl;
-            std::cout << "Current point: " << midpoint << std::endl;
+
+            print_edge_vertices(next_new_edge);
+            std::cout << "Midpoint: " << midpoint << std::endl;
             std::cout << "Previous point: " << last_node_ptr->pose.position << std::endl;
             std::cout << "Angle diff: " << angle_diff << std::endl; 
 
-            // Validating condition to accecpt the next node 
-            if (abs(angle_diff) > M_PI/6){
-                std::cout << "Rejected" << std::endl;
+
+            // Validating condition to accept the next node 
+            if (abs(angle_diff) > M_PI/4){
+                std::cout << "REJECTED" << std::endl;
+                std::cout << "=====================================" << std::endl;
                 continue;
             }
 
+            std::cout << "PASSED" << std::endl;
+            passed++;
 
-            // Confirmed, add to state
             // Create new node, the node is created here and only here
             std::shared_ptr<DT::Node> new_node_ptr = std::make_shared<DT::Node>(DT::Pose(midpoint, midpoint_angle));
             // Connect this node to last node
@@ -146,63 +156,23 @@ void DTriangPlanner::expand(Edge start_edge) {
             last_node_ptr->children_ptrs.push_back(new_node_ptr);
 
 
-            // If the new edge is not inifinite, add the new state
-            if (!_dt.is_infinite(next_new_edge)){
-                DT::TraverseState new_state(new_node_ptr, next_new_edge, current_new_edge);
-                traverse_progress.push_back(new_state);
-            }
-            // If boundary edge, finish the tree             
-            else {
-                std::vector<Point_2> path = backtrack_path(new_node_ptr);
-                _paths.push_back(path);
-            }
-        }
 
+            // Otherwise add to new state
+            DT::TraverseState new_state(new_node_ptr, next_new_edge, current_new_edge);
+            traverse_progress.push_back(new_state);                
+
+            std::cout << "=====================================" << std::endl; 
+        }    
     }
-
-    // return paths;
+    std::cout << "FINISHED GENERATING PATHS" << std::endl;
+    std::cout << "Passed: " << passed << std::endl;
+    print_paths();
 }
 
 
 
 
-// std::pair<Edge, Edge> DTriangPlanner::expand(const Edge& input_edge) {
-//     Edge_circulator circulator = _dt.incident_edges(input_edge.first->vertex(input_edge.second));
-//     Edge_circulator done(circulator);
-
-//     Edge first_incident_edge, second_incident_edge;
-
-//     if (circulator != 0) {
-//         do {
-//             if (*circulator != input_edge) {
-//                 if (first_incident_edge == Edge()) {
-//                     first_incident_edge = *circulator;
-//                 } else {
-//                     second_incident_edge = *circulator;
-//                     break;
-//                 }
-//             }
-//         } while (++circulator != done);
-//     }
-
-//     // Connecting mid points
-
-    
-//     // Find 2 vertices that are not the vertex opposite to the edge
-//     Point_2 p1 = input_edge.first->vertex((input_edge.second + 1) % 3)->point();
-//     Point_2 p2 = input_edge.first->vertex((input_edge.second + 2) % 3)->point();
-//     Point_2 midpoint = CGAL::midpoint(p1, p2);
-
-
-
-
-//     return {first_incident_edge, second_incident_edge};
-// }
-
-
-
-
-// UTILITY FUNCTIONS //
+/////////////////// PRIVATE FUNCTIONS ///////////////////////////////////////
 
 /*
  * Get next 2 edges from the current edge, moving to the next face
@@ -221,7 +191,7 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
 
     // Recognise first edge
     if (previous_edge.first == DelaunayTriangulation::Face_handle()) {
-        std::cout << "First edge" << std::endl;
+        std::cout << "FIRST EDGE" << std::endl;
 
         DelaunayTriangulation::Face_handle new_face = current_edge.first;
         if (_dt.is_infinite(new_face)){
@@ -259,20 +229,10 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
     return next_edges;
 }
 
-
-
-// TESTING FUNCTION 
-void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face) {
-    if (!face->is_valid()) {
-        std::cerr << "Invalid face handle." << std::endl;
-        return;
-    }
-
-    for (int i = 0; i < 3; ++i) {
-        Point_2 vertex = face->vertex(i)->point();
-        std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
-    }
+std::vector<std::vector<Point_2>> DTriangPlanner::get_paths(){
+    return _paths;
 }
+
 
 Point_2 DTriangPlanner::get_midpoint_of_edge(const Edge& edge) {
     Point_2 p1 = edge.first->vertex((edge.second + 1) % 3)->point();
@@ -280,29 +240,18 @@ Point_2 DTriangPlanner::get_midpoint_of_edge(const Edge& edge) {
     return CGAL::midpoint(p1, p2);
 }
 
-// double DTriangPlanner::angle_difference(const DT::Pose& car_pose, const Point_2& point) {
-//     // Convert CGAL::Lazy_exact_nt to double for atan2
-//     double dx = CGAL::to_double(point.x()) - CGAL::to_double(car_pose.position.x());
-//     double dy = CGAL::to_double(point.y()) - CGAL::to_double(car_pose.position.y());
-
-//     // Calculate angle from car to point
-//     double angle_to_point = std::atan2(dy, dx);
-
-//     // Calculate the angle difference
-//     double angle_diff = angle_to_point - car_pose.yaw;
-
-//     // Normalize the angle to be within -π to π
-//     while (angle_diff > M_PI) angle_diff -= 2 * M_PI;
-//     while (angle_diff < -M_PI) angle_diff += 2 * M_PI;
-
-//     return angle_diff;
-// }
 
 double DTriangPlanner::compute_orientation(const Point_2& p1, const Point_2& p2) {
     double deltaX = CGAL::to_double(p2.x()) - CGAL::to_double(p1.x());
     double deltaY = CGAL::to_double(p2.y()) - CGAL::to_double(p1.y());
+
+    // std::cout << "deltaX: " << deltaX << std::endl;
+    // std::cout << "deltaY: " << deltaY << std::endl;
+    // std::cout << "std::atan2(deltaY, deltaX): " << std::atan2(deltaY, deltaX) << std::endl;
+
     return std::atan2(deltaY, deltaX); // Returns angle in radians
 }
+
 
 double DTriangPlanner::normalize(double angle){
 
@@ -313,6 +262,7 @@ double DTriangPlanner::normalize(double angle){
     }    
     return angle;
 }
+
 
 std::vector<Point_2> DTriangPlanner::backtrack_path(const std::shared_ptr<DT::Node>& leaf_node) {
     std::vector<Point_2> path;
@@ -331,4 +281,44 @@ std::vector<Point_2> DTriangPlanner::backtrack_path(const std::shared_ptr<DT::No
 
 DelaunayTriangulation* DTriangPlanner::get_triangulation_ptr() {
     return &_dt;
+}
+
+// TESTING FUNCTION 
+void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face) {
+    if (!face->is_valid()) {
+        std::cerr << "Invalid face handle." << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        Point_2 vertex = face->vertex(i)->point();
+        std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
+    }
+}
+
+void DTriangPlanner::print_paths() {
+    std::cout << "Number of paths: " << _paths.size() << std::endl;
+
+    for (const auto& path : _paths) {
+        std::cout << "Path: ";
+        for (const auto& point : path) {
+            std::cout << "(" << point.x() << ", " << point.y() << ") ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+
+void DTriangPlanner::print_edge_vertices(const Edge& edge) {
+    // Extract the face and index from the edge
+    auto face = edge.first;
+    int index = edge.second;
+
+    // The vertices of the edge are the next two vertices in the face
+    Point_2 vertex1 = face->vertex((index + 1) % 3)->point();
+    Point_2 vertex2 = face->vertex((index + 2) % 3)->point();
+
+    std::cout << "Edge vertices: (" 
+            << vertex1 << "), (" 
+            << vertex2 << ")" << std::endl;
 }

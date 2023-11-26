@@ -32,7 +32,7 @@ Point_2 DTriangPlot::transform_to_car_frame(const Point_2& global_pt, double car
 void DTriangPlot::plot(){
     
     read_cone_config();
-    triangulate();
+    Edge first_edge = triangulate();
     update_global_points();
     std::vector<std::pair<Point_2, Point_2>> edges = get_edges();
                                                 
