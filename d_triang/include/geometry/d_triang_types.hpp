@@ -25,9 +25,14 @@ namespace DT{
     };
 
     /*
-     * Expand -> Validate -> Add to path -> Repeat 
+     * Store confidence information of each node
+     * 
+     * Furthermore, use the synergy of all nodes in each path
+     * to evaluate confidence score of the path
      * 
      * A path is a vector of Nodes
+     * 
+     * For colorblind mode
     */
     struct Node {
 
@@ -39,6 +44,9 @@ namespace DT{
         // std::pair<Edge, Edge> traverse_state; // Used to navigate to new node to expand the tree
         std::shared_ptr<Node> parent_ptr;
         std::vector<std::shared_ptr<Node>> children_ptrs;
+
+        // Store 2 cones that make up this node
+        std::array<Point_2, 2> cones;
 
 
         // double depth = 0; // DO I NEED THIS?

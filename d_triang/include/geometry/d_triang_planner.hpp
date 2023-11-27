@@ -127,12 +127,18 @@ private:
 
     void choose_best_path();
 
-    Point_2 get_midpoint_of_edge(const Edge& edge);
-    
+    // Point_2 get_midpoint_of_edge(const Edge& edge);
+    std::pair<Point_2, Point_2> get_points_from_edge(const Edge& edge);
+
+
     /*
-    * p1 is current node, p2 is next node
+     * p1 is current node, p2 is next node
     */
     double compute_orientation(const Point_2& p1, const Point_2& p2);
+
+    /*
+     * Path evaluation process happens here
+    */
     std::vector<Point_2> backtrack_path(const std::shared_ptr<DT::Node>& leaf_node);
 
     // Normalize the angle difference to the range (-π, π)
@@ -141,6 +147,11 @@ private:
 
     bool are_edges_equal(const Edge& e1, const Edge& e2);
 
+
+private:
+
+    // // Use this to count how many cones a path has gone between
+    // std::vector<std::pair<Point_2, bool>> _pts_status;
 };
 
 

@@ -141,33 +141,6 @@ protected:
         throw std::runtime_error("Edge not found in the given face with tolerance.");
     }
 
-    // void print_face_vertices(DelaunayTriangulation::Face_handle face) {
-    //     if (!face->is_valid()) {
-    //         std::cerr << "Invalid face handle." << std::endl;
-    //         return;
-    //     }
-
-    //     std::cout << "Print face vertices: " << std::endl;
-
-    //     for (int i = 0; i < 3; ++i) {
-    //         Point_2 vertex = face->vertex(i)->point();
-    //         std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
-    //     }
-    // }
-
-    // void print_edge_vertices(const Edge& edge) {
-    //     // Extract the face and index from the edge
-    //     auto face = edge.first;
-    //     int index = edge.second;
-
-    //     // The vertices of the edge are the next two vertices in the face
-    //     Point_2 vertex1 = face->vertex((index + 1) % 3)->point();
-    //     Point_2 vertex2 = face->vertex((index + 2) % 3)->point();
-
-    //     std::cout << "Edge vertices: (" 
-    //             << vertex1 << "), (" 
-    //             << vertex2 << ")" << std::endl;
-    // }
 };
 
 #endif

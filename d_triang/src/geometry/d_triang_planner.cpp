@@ -2,6 +2,13 @@
 #include <cmath>
 
 
+/*
+ * Top level function that handles planning 
+ *
+ * Workflow:
+ * Expand -> Preliminary condition -> Add to path -> Complete path
+ * -> Repeat -> Evaluate paths 
+*/
 void DTriangPlanner::plan(){
     Edge first_edge = triangulate();
     expand(first_edge);
@@ -12,6 +19,10 @@ void DTriangPlanner::plan(){
 void DTriangPlanner::set_cones(std::vector<Point_2> points_local){
         _points_local.clear();
         _points_local = points_local;
+
+        // for (const auto& point : _points_local) {
+        //     _pts_status.emplace_back(point, false);
+        // }
     }
 
 Edge DTriangPlanner::triangulate(){
@@ -79,7 +90,9 @@ void DTriangPlanner::expand(Edge start_edge) {
 
     std::shared_ptr<DT::Node> car_node_ptr = std::make_shared<DT::Node>(DT::Pose(0,0,0));
 
-    Point_2 first_node_midpoint = get_midpoint_of_edge(start_edge);
+    std::pair<Point_2, Point_2> two_pts_first_node = get_points_from_edge(start_edge);
+    Point_2 first_node_midpoint = CGAL::midpoint(two_pts_first_node.first, two_pts_first_node.second);
+
     double first_node_angle_diff = compute_orientation(car_node_ptr->pose.position, first_node_midpoint);
     first_node_angle_diff = abs(normalize(first_node_angle_diff));
     
@@ -93,7 +106,7 @@ void DTriangPlanner::expand(Edge start_edge) {
     std::cout << "Angle diff: " << first_node_angle_diff << std::endl; 
     std::cout << "=====================================" << std::endl; 
 
-    int passed = 0; // number of next nodes that pass the validating condtion
+    int passed = 0; // number of next nodes that pass the 'preliminary condtion'
 
     
     DT::TraverseState initial_state;
@@ -133,7 +146,9 @@ void DTriangPlanner::expand(Edge start_edge) {
                 break; // Break otherwise the same path will be pushed back twice
             }
 
-            Point_2 midpoint = get_midpoint_of_edge(next_new_edge);     
+            std::pair<Point_2, Point_2> two_pts = get_points_from_edge(next_new_edge);
+            Point_2 midpoint = CGAL::midpoint(two_pts.first, two_pts.second);
+
             double midpoint_angle = compute_orientation(last_node_ptr->pose.position, midpoint);
             double angle_diff = abs(normalize(last_node_ptr->pose.yaw - midpoint_angle));
 
@@ -144,7 +159,9 @@ void DTriangPlanner::expand(Edge start_edge) {
             std::cout << "Angle diff: " << angle_diff << std::endl; 
 
 
-            // Validating condition to accept the next node 
+            // 'Preliminary condtion' to accept the next node 
+            // Loose condition to reduce creating insensible paths
+            // After creating all complete paths that pass this condtion, they are compared for the best one
             if (abs(angle_diff) > M_PI/4){
                 std::cout << "REJECTED" << std::endl;
                 std::cout << "=====================================" << std::endl;
@@ -156,9 +173,12 @@ void DTriangPlanner::expand(Edge start_edge) {
 
             // Create new node, the node is created here and only here
             std::shared_ptr<DT::Node> new_node_ptr = std::make_shared<DT::Node>(DT::Pose(midpoint, midpoint_angle));
+            // Register this node
             // Connect this node to last node
             new_node_ptr->parent_ptr = last_node_ptr;
             last_node_ptr->children_ptrs.push_back(new_node_ptr);
+            // Add cone information of this node
+            new_node_ptr->cones = {two_pts.first, two_pts.second};
 
 
             // Otherwise add to new state
@@ -213,22 +233,20 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
     Edge edge1;
     Edge edge2;
 
-    // Recognise first edge
+    // The case of first edge
     if (previous_edge.first == DelaunayTriangulation::Face_handle()) {
         std::cout << "FIRST EDGE" << std::endl;
 
         DelaunayTriangulation::Face_handle new_face = current_edge.first;
 
-
-        std::cout << "NEXT" << std::endl;
         // There may be circumstances where the current_edge is not inifinite but 
-        // current_edge.first is inifinite 
+        // current_edge.first is still inifinite 
         if (_dt.is_infinite(new_face)){
-            // new_face = current_edge.first->neighbor(current_edge.second);
             new_face = current_edge.first->neighbor(current_edge.second);
-            std::cout << "new_face:" << std::endl;
-            print_face_vertices(new_face);
+            // std::cout << "new_face:" << std::endl;
+            // print_face_vertices(new_face);
 
+            // In this case we have to find the correct edge index
             int new_index = -1;
             for (int i = 0; i < 3; ++i) {
                 Edge possible_edge(new_face, i);
@@ -264,6 +282,7 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
         return next_edges;
     }
 
+    // Not first edge
     // The previous face is the one that contains both current_edge and previous_edge
     DelaunayTriangulation::Face_handle previous_face = current_edge.first; // (current_edge.first == previous_edge.first)
     DelaunayTriangulation::Face_handle new_face = previous_face->neighbor(current_edge.second);
@@ -307,12 +326,21 @@ void DTriangPlanner::choose_best_path(){
 }
 
 
-Point_2 DTriangPlanner::get_midpoint_of_edge(const Edge& edge) {
-    Point_2 p1 = edge.first->vertex((edge.second + 1) % 3)->point();
-    Point_2 p2 = edge.first->vertex((edge.second + 2) % 3)->point();
-    return CGAL::midpoint(p1, p2);
-}
+// Point_2 DTriangPlanner::get_midpoint_of_edge(const Edge& edge) {
+//     Point_2 p1 = edge.first->vertex((edge.second + 1) % 3)->point();
+//     Point_2 p2 = edge.first->vertex((edge.second + 2) % 3)->point();
+//     return CGAL::midpoint(p1, p2);
+// }
 
+std::pair<Point_2, Point_2> DTriangPlanner::get_points_from_edge(const Edge& edge) {
+    auto face = edge.first;
+    int i = edge.second;
+
+    Point_2 p1 = face->vertex((i + 1) % 3)->point(); // Next vertex in the face
+    Point_2 p2 = face->vertex((i + 2) % 3)->point(); // Next vertex after p1 in the face
+
+    return std::make_pair(p1, p2);
+}
 
 double DTriangPlanner::compute_orientation(const Point_2& p1, const Point_2& p2) {
     double deltaX = CGAL::to_double(p2.x()) - CGAL::to_double(p1.x());
@@ -340,6 +368,11 @@ double DTriangPlanner::normalize(double angle){
 std::vector<Point_2> DTriangPlanner::backtrack_path(const std::shared_ptr<DT::Node>& leaf_node) {
     std::vector<Point_2> path;
     std::shared_ptr<DT::Node> current_node = leaf_node;
+
+
+
+
+
 
     while (current_node) {
         path.push_back(current_node->pose.position);
