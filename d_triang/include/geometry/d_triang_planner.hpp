@@ -14,15 +14,6 @@
 
 #include "d_triang_types.hpp"
 
-// typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
-// typedef CGAL::Delaunay_triangulation_2<Kernel> DelaunayTriangulation;
-// typedef Kernel::Point_2 Point_2;
-// typedef DelaunayTriangulation::Edge Edge;
-// typedef DelaunayTriangulation::Edge_circulator Edge_circulator;
-
-// typedef DT::Node Node;
-
-
 /**
  * @brief Base class for path planners
  * 
@@ -56,6 +47,9 @@
  * NOTE 
  *      The path always stems from the car body
  * 
+ * EXPERIMENT RESULT
+ *      The best path doesn't always have the most points (esp. in case where of missing cones) 
+ * 
  */
 class DTriangPlanner {
 
@@ -84,7 +78,15 @@ public:
      * Expand all the possible paths in a bread-first fashion
     */
     void expand(Edge start);
-    
+
+    /*
+     * 
+    */
+    std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);   
+
+
+
+
     /*
      * Get a list of complete paths
     */    
@@ -101,11 +103,14 @@ public:
     */
     std::vector<std::vector<Point_2>> get_other_paths();
 
-    /*
-     * For testing
-    */
+    
+    // Testing function 
     DelaunayTriangulation* get_triangulation_ptr();
-
+    Point_2 transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw);
+    void print_face_vertices(DelaunayTriangulation::Face_handle face);
+    void print_paths();
+    void print_edge_vertices(const Edge& edge);
+    bool is_approx_equal(const Point_2& p1, const Point_2& p2, double tolerance); // Also used by test fixture
 
 protected:
 
@@ -120,8 +125,6 @@ protected:
 
 private:
 
-    std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);
-
     void choose_best_path();
 
     Point_2 get_midpoint_of_edge(const Edge& edge);
@@ -135,10 +138,8 @@ private:
     // Normalize the angle difference to the range (-π, π)
     double normalize(double angle); // static?
 
-    // Testing function 
-    void print_face_vertices(DelaunayTriangulation::Face_handle face);
-    void print_paths();
-    void print_edge_vertices(const Edge& edge);
+
+    bool are_edges_equal(const Edge& e1, const Edge& e2);
 
 };
 

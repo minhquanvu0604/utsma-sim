@@ -45,7 +45,6 @@ public:
     std::vector<std::pair<Point_2, Point_2>> get_path_for_plotting(std::vector<Point_2> path);
 
 
-
 private:
 
     int _config_num;
@@ -64,5 +63,5 @@ private:
 
     std::shared_ptr<PlotWidget> _widget;
 
-    Point_2 transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw);
+
 };

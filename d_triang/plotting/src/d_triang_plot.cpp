@@ -1,5 +1,6 @@
 #include "d_triang_plot.hpp"
 
+
 int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv); 
@@ -16,18 +17,6 @@ int main(int argc, char *argv[]) {
     return app.exec();
 }
 
-Point_2 DTriangPlot::transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw) {
-
-    // Translate the point
-    double translated_x = CGAL::to_double(global_pt.x()) - car_x;
-    double translated_y = CGAL::to_double(global_pt.y()) - car_y;
-
-    // Rotate the point
-    double rotated_x = translated_x * cos(car_yaw) + translated_y * sin(car_yaw);
-    double rotated_y = -translated_x * sin(car_yaw) + translated_y * cos(car_yaw);
-
-    return Point_2(rotated_x, rotated_y);
-}
 
 void DTriangPlot::plot(){
     

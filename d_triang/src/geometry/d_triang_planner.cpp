@@ -52,7 +52,13 @@ Edge DTriangPlanner::triangulate(){
 
     // Logic error checking
     if (!edge_found) 
-        throw std::runtime_error("Vertices are not connected by an edge.");
+        throw std::runtime_error("Vertices are not connected by an edge");
+
+    if (_dt.is_infinite(nearest_edge))
+        throw std::runtime_error("The nearest edge is infinite");
+
+    // std::cout << "The edge:";
+    // print_edge_vertices(nearest_edge);
 
     return nearest_edge;
 }
@@ -168,6 +174,23 @@ void DTriangPlanner::expand(Edge start_edge) {
 }
 
 
+std::vector<std::vector<Point_2>> DTriangPlanner::get_paths(){
+    return _paths;
+}
+
+std::vector<Point_2> DTriangPlanner::get_best_path(){
+    return _best_path;
+}
+
+std::vector<std::vector<Point_2>> DTriangPlanner::get_other_paths(){
+    return _other_paths;
+}
+
+
+DelaunayTriangulation* DTriangPlanner::get_triangulation_ptr() {
+    return &_dt;
+}
+
 
 
 /////////////////// PRIVATE FUNCTIONS ///////////////////////////////////////
@@ -186,23 +209,57 @@ void DTriangPlanner::expand(Edge start_edge) {
 std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previous_edge) {
     
     std::vector<Edge> next_edges;
+    Edge edge0;
+    Edge edge1;
+    Edge edge2;
 
     // Recognise first edge
     if (previous_edge.first == DelaunayTriangulation::Face_handle()) {
         std::cout << "FIRST EDGE" << std::endl;
 
         DelaunayTriangulation::Face_handle new_face = current_edge.first;
+
+
+        std::cout << "NEXT" << std::endl;
+        // There may be circumstances where the current_edge is not inifinite but 
+        // current_edge.first is inifinite 
         if (_dt.is_infinite(new_face)){
             // new_face = current_edge.first->neighbor(current_edge.second);
-            throw std::runtime_error("Infinite face from first edge");
+            new_face = current_edge.first->neighbor(current_edge.second);
+            std::cout << "new_face:" << std::endl;
+            print_face_vertices(new_face);
+
+            int new_index = -1;
+            for (int i = 0; i < 3; ++i) {
+                Edge possible_edge(new_face, i);
+                if (are_edges_equal(possible_edge, current_edge)) {
+                    new_index = i;
+                    break;
+                }
+            }
+            if (new_index == -1) {
+                throw std::runtime_error("Could not find the edge in the new face.");
+            }
+
+            edge0 = Edge(new_face, new_index);
+            edge1 = Edge(new_face, (new_index + 1) % 3);
+            edge2 = Edge(new_face, (new_index + 2) % 3);
+
         }
-        Edge edge0(new_face, current_edge.second);
-        Edge edge1(new_face, (current_edge.second + 1) % 3);
-        Edge edge2(new_face, (current_edge.second + 2) % 3);
+        else{
+            edge0 = Edge(new_face, current_edge.second);
+            edge1 = Edge(new_face, (current_edge.second + 1) % 3);
+            edge2 = Edge(new_face, (current_edge.second + 2) % 3);
+        }
 
         next_edges.push_back(edge0);
         next_edges.push_back(edge1);
         next_edges.push_back(edge2);
+
+        std::cout << "Print edge: " << std::endl;
+        for (auto& edge : next_edges){
+            print_edge_vertices(edge);
+        }
 
         return next_edges;
     }
@@ -216,9 +273,9 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
 
     int new_face_edge_index = new_face->index(previous_face);
 
-    Edge edge0(new_face, new_face_edge_index);
-    Edge edge1(new_face, (new_face_edge_index + 1) % 3);
-    Edge edge2(new_face, (new_face_edge_index + 2) % 3);
+    edge0 = Edge(new_face, new_face_edge_index);
+    edge1 = Edge(new_face, (new_face_edge_index + 1) % 3);
+    edge2 = Edge(new_face, (new_face_edge_index + 2) % 3);
 
     next_edges.push_back(edge0);
     next_edges.push_back(edge1);
@@ -247,19 +304,6 @@ void DTriangPlanner::choose_best_path(){
             }
         }
     }
-}
-
-
-std::vector<std::vector<Point_2>> DTriangPlanner::get_paths(){
-    return _paths;
-}
-
-std::vector<Point_2> DTriangPlanner::get_best_path(){
-    return _best_path;
-}
-
-std::vector<std::vector<Point_2>> DTriangPlanner::get_other_paths(){
-    return _other_paths;
 }
 
 
@@ -308,11 +352,21 @@ std::vector<Point_2> DTriangPlanner::backtrack_path(const std::shared_ptr<DT::No
     return path;
 }
 
-DelaunayTriangulation* DTriangPlanner::get_triangulation_ptr() {
-    return &_dt;
+bool DTriangPlanner::are_edges_equal(const Edge& e1, const Edge& e2) {
+    double tolerance = 1e-3;
+    auto seg1 = _dt.segment(e1);
+    auto seg2 = _dt.segment(e2);
+
+    return (is_approx_equal(seg1.source(), seg2.source(), tolerance) && is_approx_equal(seg1.target(), seg2.target(), tolerance)) ||
+           (is_approx_equal(seg1.source(), seg2.target(), tolerance) && is_approx_equal(seg1.target(), seg2.source(), tolerance));
 }
 
-// TESTING FUNCTION 
+bool DTriangPlanner::is_approx_equal(const Point_2& p1, const Point_2& p2, double tolerance) {
+    return CGAL::squared_distance(p1, p2) < tolerance * tolerance;
+}
+
+//////////////////////////////// TESTING FUNCTION ///////////////////////////////////////
+
 void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face) {
     if (!face->is_valid()) {
         std::cerr << "Invalid face handle." << std::endl;
@@ -351,3 +405,19 @@ void DTriangPlanner::print_edge_vertices(const Edge& edge) {
             << vertex1 << "), (" 
             << vertex2 << ")" << std::endl;
 }
+
+
+Point_2 DTriangPlanner::transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw) {
+
+    // Translate the point
+    double translated_x = CGAL::to_double(global_pt.x()) - car_x;
+    double translated_y = CGAL::to_double(global_pt.y()) - car_y;
+
+    // Rotate the point
+    double rotated_x = translated_x * cos(car_yaw) + translated_y * sin(car_yaw);
+    double rotated_y = -translated_x * sin(car_yaw) + translated_y * cos(car_yaw);
+
+    return Point_2(rotated_x, rotated_y);
+}
+
+
