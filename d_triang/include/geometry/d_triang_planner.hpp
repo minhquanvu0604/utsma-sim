@@ -15,41 +15,59 @@
 #include "d_triang_types.hpp"
 
 /**
- * @brief Base class for path planners
- * 
- * CONTRACT
- *      INPUT : A list of cones to be used for planning at that instance
- *      OUTPUT : A path
- *          ---- Find a good data structure for them ----
- *      BEHAVIOUR : ....
- * 
- * USAGE
- *      set_cones() -> plan() -> get_best_path()/other getters
- * 
- * ANALYSIS
- *      Compromise the computer vision section
- *          Missing cones
- *          Incorrect color
- * 
- *      Loss function : based on compromisation of vision 
- *          Color
- *          Cone lining up in a reasonable curve
- *          Path is of reasonable curve
- *          Distance between consecutive cones
- *          Have cones on both side
- * 
- * TO RESEARCH
- *      How to refine the path certainty other time
- *      Metrics for performance evaluation
- *      The path planner takes input from SLAM, but still stores meaningful
- *          data itself regarding past path
- * 
- * NOTE 
- *      The path always stems from the car body
- * 
- * EXPERIMENT RESULT
- *      The best path doesn't always have the most points (esp. in case where of missing cones) 
- * 
+@brief Base class for path planners
+
+CONTRACT
+    INPUT : A list of cones to be used for planning at that instance
+    OUTPUT : A path
+        ---- Find a good data structure for them ----
+    BEHAVIOUR : ....
+
+USAGE
+    set_cones() -> plan() -> get_best_path()/other getters
+
+ANALYSIS
+    Compromise the computer vision section
+        Missing cones
+        Incorrect color
+
+    Loss function : based on compromisation of vision 
+        Color
+        Cone lining up in a reasonable curve
+        Path is of reasonable curve
+        Distance between consecutive cones
+        Have cones on both side
+
+TO RESEARCH
+    How to refine the path certainty other time
+    Metrics for performance evaluation
+    The path planner takes input from SLAM, but still stores meaningful
+        data itself regarding past path
+
+TO EXPLORE
+    Efficient Data Handling: Ensure your path planner can efficiently process incoming data in real-time. This might involve optimizing data structures for faster access and updates.
+        Data Structure & Algorithm: the CGAL lib may have high overhead since it's optimised for large set of poitns not repeated calculation with new set of points every time stamp
+        Caching and Reuse: Cache previously calculated paths or path segments that are likely to be reused. When a similar planning scenario occurs, you can quickly retrieve and adapt these paths instead of starting from scratch.
+            Matching Algorithm: Implement an algorithm to match the current cones' positions with the translated positions from the previous cycle. This can be done using nearest neighbor matching, where each cone in the current cycle is matched with the closest translated cone from the previous cycle.
+
+        Parallel Data Processing: Utilize parallel computing techniques to process data concurrently, leveraging multi-core processors.
+        Profile and Benchmark: Regularly profile the data handling process to identify bottlenecks and optimize them.
+
+    Continuous Updating Mechanism: Your algorithm should be able to update its path planning based on new data without restarting from scratch. This could be achieved through incremental updates to the existing path or quick re-planning.
+        Incremental Updates: Implement the ability to modify the existing path based on new data. For instance, if a new obstacle is detected, only the path segments affected by this obstacle should be recalculated.
+        Maintaining a Balance: Strive for a balance between adapting to new data and sticking to the original plan. Constantly changing the path can lead to inefficiency and erratic behavior.
+        Feedback Loops (Adaptive): Incorporate feedback mechanisms to continuously assess the validity of the path and make adjustments as needed
+    
+    Predictive Analysis: Use predictive models to anticipate future changes in the environment and adjust the path accordingly.
+    
+    Concurrency and Threading: Consider using multi-threading or asynchronous programming to handle data processing, path computation, and execution in parallel.
+
+NOTE 
+    The path always stems from the car body
+
+EXPERIMENT RESULT
+    The best path doesn't always have the most points (esp. in case where of missing cones) 
+
  */
 class DTriangPlanner {
 
@@ -59,28 +77,28 @@ public:
     void set_cones(std::vector<Point_2> points_local);
     
     /*
-     * Main function to perform planning
+    Main function to perform planning
     */
     void plan();
 
     /*
-     * Perform triangulation and return the nearest edge to start with
-     * Return a copied edge to navigate inside the triangulation. 
-     * 
-     * In CGAL, even though nearest_edge is a copy, it still represents a valid edge in the triangulation. 
-     * The copied edge retains the necessary information (face handle and index) to identify the specific edge 
-     * in the triangulation, allowing you to use it for further operations or navigation within the triangulation structure.
+    Perform triangulation and return the nearest edge to start with
+    Return a copied edge to navigate inside the triangulation. 
+    
+    In CGAL, even though nearest_edge is a copy, it still represents a valid edge in the triangulation. 
+    The copied edge retains the necessary information (face handle and index) to identify the specific edge 
+    in the triangulation, allowing you to use it for further operations or navigation within the triangulation structure.
     */
     Edge triangulate();
 
 
     /*
-     * Expand all the possible paths in a bread-first fashion
+    Expand all the possible paths in a bread-first fashion
     */
     void expand(Edge start);
 
     /*
-     * 
+    
     */
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);   
 
@@ -88,18 +106,18 @@ public:
 
 
     /*
-     * Get a list of complete paths
+    Get a list of complete paths
     */    
     std::vector<std::vector<Point_2>> get_paths();
 
     /*
-     * Get the best path from all complete paths, which is meant to be the chosen path 
-     * for the car to follow
+    Get the best path from all complete paths, which is meant to be the chosen path 
+    for the car to follow
     */
     std::vector<Point_2> get_best_path();
 
     /*
-    * Get other complete paths besides the best one
+   Get other complete paths besides the best one
     */
     std::vector<std::vector<Point_2>> get_other_paths();
 
@@ -132,12 +150,12 @@ private:
 
 
     /*
-     * p1 is current node, p2 is next node
+    p1 is current node, p2 is next node
     */
     double compute_orientation(const Point_2& p1, const Point_2& p2);
 
     /*
-     * Path evaluation process happens here
+    Path evaluation process happens here
     */
     std::vector<Point_2> backtrack_path(const std::shared_ptr<DT::Node>& leaf_node);
 

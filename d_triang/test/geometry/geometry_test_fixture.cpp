@@ -70,20 +70,6 @@ protected:
         return points_local;
     }
 
-
-    // Point_2 transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw) {
-
-    //     // Translate the point
-    //     double translated_x = CGAL::to_double(global_pt.x()) - car_x;
-    //     double translated_y = CGAL::to_double(global_pt.y()) - car_y;
-
-    //     // Rotate the point
-    //     double rotated_x = translated_x * cos(car_yaw) + translated_y * sin(car_yaw);
-    //     double rotated_y = -translated_x * sin(car_yaw) + translated_y * cos(car_yaw);
-
-    //     return Point_2(rotated_x, rotated_y);
-    // }
-
     bool are_points_vertices_of_edge(const DelaunayTriangulation::Edge& edge, const Point_2& p1, const Point_2& p2) {
         
         double tolerance = 1e-3;
@@ -101,10 +87,6 @@ protected:
 
         return (close_p1_v1 && close_p2_v2) || (close_p1_v2 && close_p2_v1);
     }
-
-    // bool _planner.is_approx_equal(const Point_2& p1, const Point_2& p2, double tolerance) {
-    //     return CGAL::squared_distance(p1, p2) < tolerance * tolerance;
-    // }
 
     Face_handle find_face_with_vertices(const Point_2& v1, const Point_2& v2, const Point_2& v3) {
         double tolerance = 1e-3;

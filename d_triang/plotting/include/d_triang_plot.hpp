@@ -52,9 +52,9 @@ private:
     const std::unordered_map<int, std::string> PATH_MAP = {
         {1, "straight.yaml"},
         {2, "straight_with_stretch_p.yaml"},
-        {3, "straight_missing_cone.yaml"},
+        {3, "straight_missing_cone.yaml"}, // Fail
         {4, "slight_curve.yaml"},
-        {5, "slight_curve_missing_cone1.yaml"},
+        {5, "slight_curve_missing_cone1.yaml"}, // Fail
         {6, "slight_curve_missing_cone2.yaml"},
         {7, "slight_curve_missing_cone3.yaml"},
         {8, "near_steep_turn.yaml"},        
