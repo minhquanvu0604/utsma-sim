@@ -23,8 +23,11 @@ void DTriangPlot::plot(){
     read_cone_config();
     plan();
     update_global_points();
+
+    // Triangulation edges
     std::vector<std::pair<Point_2, Point_2>> edges = get_edges_for_plotting();
 
+    // Other path
     std::vector<std::vector<Point_2>> other_paths = get_other_paths();
     std::vector<std::pair<Point_2, Point_2>> other_paths_for_plotting;
     for (auto& other_path : other_paths){
@@ -32,11 +35,21 @@ void DTriangPlot::plot(){
         other_paths_for_plotting.insert(other_paths_for_plotting.end(), path_for_plotting.begin(), path_for_plotting.end());
     }
 
+    // Best path
     std::vector<Point_2> best_path = get_best_path();
     std::vector<std::pair<Point_2, Point_2>> best_path_for_plotting = get_path_for_plotting(best_path);
-                                                
-    // PlotWidget widget(_points_global, _points_local, edges);
-    _widget = std::make_shared<PlotWidget>(_points_global, _points_local, edges, other_paths_for_plotting, best_path_for_plotting);    
+
+    // Smooth path
+    std::vector<std::pair<Point_2, Point_2>> smooth_path_for_plotting;
+
+    if (SMOOTH_PATH){
+        std::vector<Point_2> smooth_best_path = catmull_rom_spline(best_path, 0.5);
+        // std::cout << "smooth_best_path size: " << smooth_best_path.size() << std::endl;
+        smooth_path_for_plotting = get_path_for_plotting(smooth_best_path); 
+    }
+
+
+    _widget = std::make_shared<PlotWidget>(_points_global, _points_local, edges, other_paths_for_plotting, best_path_for_plotting, smooth_path_for_plotting);    
     _widget->resize(800, 900); 
     _widget->show();
 }

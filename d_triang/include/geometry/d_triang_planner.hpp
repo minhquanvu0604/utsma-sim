@@ -49,7 +49,9 @@ TO EXPLORE
         Data Structure & Algorithm: the CGAL lib may have high overhead since it's optimised for large set of poitns not repeated calculation with new set of points every time stamp
         Caching and Reuse: Cache previously calculated paths or path segments that are likely to be reused. When a similar planning scenario occurs, you can quickly retrieve and adapt these paths instead of starting from scratch.
             Matching Algorithm: Implement an algorithm to match the current cones' positions with the translated positions from the previous cycle. This can be done using nearest neighbor matching, where each cone in the current cycle is matched with the closest translated cone from the previous cycle.
-
+                Thresholding: Set a maximum expected deviation from the average or median value. If a reading exceeds this threshold, it's considered an outlier and rejected.
+                Running Average: Maintain a running average of the sensor readings. If a new reading is significantly different from this average, it can be discarded or given less weight.
+                Median Filter: Use a median filter, which replaces each entry with the median of neighboring entries. This method is effective in removing "spike" noise.
         Parallel Data Processing: Utilize parallel computing techniques to process data concurrently, leveraging multi-core processors.
         Profile and Benchmark: Regularly profile the data handling process to identify bottlenecks and optimize them.
 
@@ -102,22 +104,41 @@ public:
     */
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);   
 
+    /*
+    Catmull-Rom splines pass through each control point (unlike Bézier curves)
 
+    Note very good so optional at the moment
+    */
+    std::vector<Point_2> catmull_rom_spline(const std::vector<Point_2>& waypoints, double t);
+
+
+    // Not working yet
+    std::vector<Point_2> bezier_curve(const std::vector<Point_2>& control_points, int num_points);
+    std::vector<Point_2> calculate_control_points(const std::vector<Point_2>& path, double curvature_parameter);
+    std::vector<Point_2> smooth_path(const std::vector<Point_2>& path);
 
 
     /*
     Get a list of complete paths
     */    
     std::vector<std::vector<Point_2>> get_paths();
+    /*
+    Used to save nodes along with their 2 cones
+    */ 
+    std::vector<std::vector<std::pair<Point_2, std::array<Point_2, 2>>>> get_paths_2();
 
     /*
     Get the best path from all complete paths, which is meant to be the chosen path 
     for the car to follow
     */
     std::vector<Point_2> get_best_path();
+    /*
+    Used to save nodes along with their 2 cones
+    */ 
+    std::vector<std::pair<Point_2, std::array<Point_2, 2>>> get_best_path_2();
 
     /*
-   Get other complete paths besides the best one
+    Get other complete paths besides the best one
     */
     std::vector<std::vector<Point_2>> get_other_paths();
 
@@ -129,6 +150,8 @@ public:
     void print_paths();
     void print_edge_vertices(const Edge& edge);
     bool is_approx_equal(const Point_2& p1, const Point_2& p2, double tolerance); // Also used by test fixture
+    void print_path_2(const std::vector<std::pair<Point_2, std::array<Point_2, 2>>>& path);
+
 
 protected:
 
@@ -136,14 +159,24 @@ protected:
     std::vector<Point_2> _points_local;
     
     // All the possible paths found, each vector of Point_2 represents a path
+    //
+    // Just node location
     std::vector<std::vector<Point_2>> _paths;
     std::vector<Point_2> _best_path;
+    //
+    // Nodes along with their 2 cones
+    std::vector<std::vector<std::pair<Point_2, std::array<Point_2, 2>>>> _paths_2;
+    std::vector<std::pair<Point_2, std::array<Point_2, 2>>> _best_path_2;
+
+
+    
     std::vector<std::vector<Point_2>> _other_paths;
 
 
 private:
 
     void choose_best_path();
+    void choose_best_path_2();
 
     // Point_2 get_midpoint_of_edge(const Edge& edge);
     std::pair<Point_2, Point_2> get_points_from_edge(const Edge& edge);
@@ -159,6 +192,11 @@ private:
     */
     std::vector<Point_2> backtrack_path(const std::shared_ptr<DT::Node>& leaf_node);
 
+    /*
+    Used to save nodes along with their 2 cones
+    */ 
+    std::vector<std::pair<Point_2, std::array<Point_2, 2>>> backtrack_path_2(const std::shared_ptr<DT::Node>& leaf_node);
+
     // Normalize the angle difference to the range (-π, π)
     double normalize(double angle); // static?
 
@@ -170,6 +208,8 @@ private:
 
     // // Use this to count how many cones a path has gone between
     // std::vector<std::pair<Point_2, bool>> _pts_status;
+
+    // The corresponding 
 };
 
 

@@ -14,7 +14,7 @@
     <arg name="vehicleModel" default="DynamicBicycle"/>
 
     <!-- Launch the Gazebo GUI -->
-    <arg name="gazebo_gui" default="false"/>
+    <arg name="gazebo_gui" default="true"/>
 
     <!-- Launch RViz -->
     <arg name="rviz" default="true"/>
@@ -27,7 +27,7 @@
     <arg name="launch_group" default="default" />
 
     <!-- Launch the simulation -->
-    <include file="$(find eufs_gazebo)/launch/$(arg track).launch">
+    <include file="$(find utsma_gazebo)/launch/$(arg track).launch">
         <arg name="vehicleModel" value="$(arg vehicleModel)"/>
         <arg name="gazebo_gui" value="$(arg gazebo_gui)"/>
         <arg name="rviz" value="$(arg rviz)"/>

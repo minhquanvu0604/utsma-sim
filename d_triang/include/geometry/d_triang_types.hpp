@@ -25,27 +25,40 @@ namespace DT{
     };
 
     /*
-     * Store confidence information of each node
-     * 
-     * Furthermore, use the synergy of all nodes in each path
-     * to evaluate confidence score of the path
-     * 
-     * A path is a vector of Nodes
-     * 
-     * For colorblind mode
+    Store information of each node
+        [x] Parent node pointer
+        [x] Children nodes pointer
+        [ ] Node-wise confidence score
+        [x] 2 cones that make up this node
+            ( ) Calculate the synergy of all nodes in each path to evaluate confidence score of the path
+            (x) For matching algorithm: the matching next pattern will have to use only certain cones 
+                that corresponds to the last cones used to find midpoints 
+        []
+
+
+    
+    
+    A path is a vector of Nodes
+    
+    For colorblind mode
     */
     struct Node {
 
         // Mid point
         // Direction from the last Node to this Node
         // Used to validate expansion and storing paths
+        // 
+        // Ther's an approach where midpoints are calculated all at once,
+        // and each Node can store a pointer to an existing mid points
+        // This avoids data duplication but efforts would be made to find that midpoint 
+        // to point to given an edge
         Pose pose;  
 
         // std::pair<Edge, Edge> traverse_state; // Used to navigate to new node to expand the tree
         std::shared_ptr<Node> parent_ptr;
         std::vector<std::shared_ptr<Node>> children_ptrs;
 
-        // Store 2 cones that make up this node
+        // Similar to Pose's Point_2, can be a pointer to Segment or two pointers to Vertex
         std::array<Point_2, 2> cones;
 
 
@@ -84,17 +97,21 @@ namespace DT{
     };
 
     /*
-     * What parameters to represent a path?
-     * - Associate edge for each point?
-     * - A map to represent which nodes the path goes between (good path should unlock more cones)?
-     * - Per-path basis or per-node basis: angle difference, confident point (depends on path eval metrics)?
-     * - Depth 
-     * - etc
+    What parameters to represent a path?
+    - Associate edge for each point?
+    - A map to represent which nodes the path goes between (good path should unlock more cones)?
+    - Per-path basis or per-node basis: angle difference, confident point (depends on path eval metrics)?
+    - Depth 
+    - etc
     */
     // struct Path {
     //     std::vector<std::shared_ptr<Point_2>> order;
     //     int depth = -1;
     // };
+
+    // struct Path{
+
+    // }
 
 }
 #endif

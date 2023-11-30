@@ -12,7 +12,9 @@
 void DTriangPlanner::plan(){
     Edge first_edge = triangulate();
     expand(first_edge);
-    choose_best_path();
+    // choose_best_path();
+    choose_best_path_2();
+
 }
 
 
@@ -142,6 +144,8 @@ void DTriangPlanner::expand(Edge start_edge) {
                 std::cout << "END PATH" << std::endl;
                 std::vector<Point_2> path = backtrack_path(last_node_ptr);
                 _paths.push_back(path);
+                std::vector<std::pair<Point_2, std::array<Point_2, 2>>> path_2 = backtrack_path_2(last_node_ptr);
+                _paths_2.push_back(path_2);
                 
                 break; // Break otherwise the same path will be pushed back twice
             }
@@ -191,16 +195,27 @@ void DTriangPlanner::expand(Edge start_edge) {
     std::cout << "FINISHED GENERATING PATHS" << std::endl;
     std::cout << "Passed: " << passed << std::endl;
     print_paths();
+    std::cout << "2222222" << std::endl;
+    std::cout << "_paths_2.size(): " << _paths_2.size() << std::endl;
+
 }
 
 
 std::vector<std::vector<Point_2>> DTriangPlanner::get_paths(){
     return _paths;
 }
+std::vector<std::vector<std::pair<Point_2, std::array<Point_2, 2>>>> DTriangPlanner::get_paths_2(){
+    return _paths_2;
+}
+
 
 std::vector<Point_2> DTriangPlanner::get_best_path(){
     return _best_path;
 }
+std::vector<std::pair<Point_2, std::array<Point_2, 2>>> DTriangPlanner::get_best_path_2(){
+    return _best_path_2;
+}
+
 
 std::vector<std::vector<Point_2>> DTriangPlanner::get_other_paths(){
     return _other_paths;
@@ -274,10 +289,10 @@ std::vector<Edge> DTriangPlanner::get_next_edges(Edge current_edge, Edge previou
         next_edges.push_back(edge1);
         next_edges.push_back(edge2);
 
-        std::cout << "Print edge: " << std::endl;
-        for (auto& edge : next_edges){
-            print_edge_vertices(edge);
-        }
+        // std::cout << "Print edge: " << std::endl;
+        // for (auto& edge : next_edges){
+        //     print_edge_vertices(edge);
+        // }
 
         return next_edges;
     }
@@ -315,14 +330,44 @@ void DTriangPlanner::choose_best_path(){
         }
     }
 
-    if (index_of_longest != -1) {
-        _best_path = _paths[index_of_longest];
-        for (int i = 0; i < _paths.size(); ++i) {
-            if (i != index_of_longest) {
-                _other_paths.push_back(_paths[i]);
-            }
+    _best_path = _paths[index_of_longest];
+    
+    Point_2 car_pt = Point_2(0,0);
+    _best_path.insert(_best_path.begin(), car_pt); // Add the car point only to the best path
+
+
+    for (int i = 0; i < _paths.size(); ++i) {
+        if (i != index_of_longest) {
+            _other_paths.push_back(_paths[i]);
         }
     }
+    
+}
+
+void DTriangPlanner::choose_best_path_2(){
+    int max_size = 0;
+    int index_of_longest = -1;
+
+    for (int i = 0; i < _paths_2.size(); ++i) {
+        if (_paths_2[i].size() > max_size) {
+            max_size = _paths_2[i].size();
+            index_of_longest = i;
+        }
+    }
+
+    _best_path_2 = _paths_2[index_of_longest];
+    
+    std::pair<Point_2, std::array<Point_2, 2>> car_node;
+    car_node.first = Point_2(0,0);
+    _best_path_2.insert(_best_path_2.begin(), car_node); // Add the car point only to the best path
+
+    // For other paths, dont' have to save the 2 cones for each nodes 
+    for (int i = 0; i < _paths.size(); ++i) {
+        if (i != index_of_longest) {
+            _other_paths.push_back(_paths[i]);
+        }
+    }
+    
 }
 
 
@@ -370,10 +415,6 @@ std::vector<Point_2> DTriangPlanner::backtrack_path(const std::shared_ptr<DT::No
     std::shared_ptr<DT::Node> current_node = leaf_node;
 
 
-
-
-
-
     while (current_node) {
         path.push_back(current_node->pose.position);
         current_node = current_node->parent_ptr;
@@ -384,6 +425,28 @@ std::vector<Point_2> DTriangPlanner::backtrack_path(const std::shared_ptr<DT::No
 
     return path;
 }
+
+std::vector<std::pair<Point_2, std::array<Point_2, 2>>> DTriangPlanner::backtrack_path_2(const std::shared_ptr<DT::Node>& leaf_node) {
+    std::vector<std::pair<Point_2, std::array<Point_2, 2>>> path;
+    
+    std::shared_ptr<DT::Node> current_node = leaf_node;
+
+    while (current_node) {
+
+        Point_2 point = current_node->pose.position;
+        std::array<Point_2, 2> cones = current_node->cones;
+        std::pair<Point_2, std::array<Point_2, 2>> node = std::make_pair(point, cones);
+        path.push_back(node);
+
+        current_node = current_node->parent_ptr;
+    }
+
+    // Reverse the path to get it from root to leaf
+    std::reverse(path.begin(), path.end());
+    std::cout << "213222222path_2.size(): " << path.size() << std::endl;
+    return path;
+}
+
 
 bool DTriangPlanner::are_edges_equal(const Edge& e1, const Edge& e2) {
     double tolerance = 1e-3;
@@ -397,6 +460,106 @@ bool DTriangPlanner::are_edges_equal(const Edge& e1, const Edge& e2) {
 bool DTriangPlanner::is_approx_equal(const Point_2& p1, const Point_2& p2, double tolerance) {
     return CGAL::squared_distance(p1, p2) < tolerance * tolerance;
 }
+
+std::vector<Point_2> DTriangPlanner::catmull_rom_spline(const std::vector<Point_2>& waypoints, double t) {
+    std::vector<Point_2> smooth_path;
+
+    if (waypoints.size() < 4) {
+        return waypoints;
+    }
+
+    smooth_path.push_back(waypoints.front());
+
+    for (size_t i = 1; i < waypoints.size() - 2; ++i) {
+        for (double t_iter = 0; t_iter < 1; t_iter += t) {
+            double t2 = t_iter * t_iter;
+            double t3 = t2 * t_iter;
+
+            // Catmull-Rom spline equation coefficients
+            double p0 = (-t3 + 2*t2 - t_iter) / 2;
+            double p1 = (3*t3 - 5*t2 + 2) / 2;
+            double p2 = (-3*t3 + 4*t2 + t_iter) / 2;
+            double p3 = (t3 - t2) / 2;
+
+            // Calculating point coordinates
+            double x = CGAL::to_double(waypoints[i - 1].x()) * p0 + CGAL::to_double(waypoints[i].x()) * p1 + CGAL::to_double(waypoints[i + 1].x()) * p2 + CGAL::to_double(waypoints[i + 2].x()) * p3;
+            double y = CGAL::to_double(waypoints[i - 1].y()) * p0 + CGAL::to_double(waypoints[i].y()) * p1 + CGAL::to_double(waypoints[i + 1].y()) * p2 + CGAL::to_double(waypoints[i + 2].y()) * p3;
+
+            // Constructing a new point
+            Point_2 point(x, y);
+
+            smooth_path.push_back(point);
+        }
+    }
+
+    smooth_path.push_back(waypoints.back());
+
+    return smooth_path;
+}
+
+std::vector<Point_2> DTriangPlanner::bezier_curve(const std::vector<Point_2>& control_points, int num_points) {
+    std::vector<Point_2> bezier_curve;
+    int n = control_points.size() - 1; // degree of the curve
+
+    for (int i = 0; i <= num_points; ++i) {
+        double t = static_cast<double>(i) / num_points;
+        std::vector<Point_2> temp = control_points;
+
+        // De Casteljau's Algorithm
+        for (int k = 1; k <= n; ++k) {
+            for (int j = 0; j <= n - k; ++j) {
+                double x = (1 - t) * CGAL::to_double(temp[j].x()) + t * CGAL::to_double(temp[j + 1].x());
+                double y = (1 - t) * CGAL::to_double(temp[j].y()) + t * CGAL::to_double(temp[j + 1].y());
+                temp[j] = Point_2(x, y);
+            }
+        }
+
+        bezier_curve.push_back(temp[0]);
+    }
+
+    return bezier_curve;
+}
+
+std::vector<Point_2> DTriangPlanner::calculate_control_points(const std::vector<Point_2>& path, double curvature_parameter) {
+    std::vector<Point_2> control_points;
+
+    control_points.push_back(path.front());
+    for (size_t i = 0; i < path.size() - 1; ++i) {
+        // Get two consecutive points
+        Point_2 p1 = path[i];
+        Point_2 p2 = path[i + 1];
+
+        // Calculate mid-point
+        double mid_x = (CGAL::to_double(p1.x()) + CGAL::to_double(p2.x())) / 2;
+        double mid_y = (CGAL::to_double(p1.y()) + CGAL::to_double(p2.y())) / 2;
+
+        // Calculate a perpendicular vector
+        double dx = CGAL::to_double(p2.x()) - CGAL::to_double(p1.x());
+        double dy = CGAL::to_double(p2.y()) - CGAL::to_double(p1.y());
+        double length = sqrt(dx * dx + dy * dy);
+        double perp_dx = -dy / length;
+        double perp_dy = dx / length;
+
+        // Calculate control points using the curvature parameter
+        Point_2 control_point1(mid_x + perp_dx * curvature_parameter, mid_y + perp_dy * curvature_parameter);
+        Point_2 control_point2(mid_x - perp_dx * curvature_parameter, mid_y - perp_dy * curvature_parameter);
+
+        control_points.push_back(control_point1);
+        control_points.push_back(control_point2);
+    }
+    control_points.push_back(path.back());
+
+
+    return control_points;
+}
+
+std::vector<Point_2> DTriangPlanner::smooth_path(const std::vector<Point_2>& path) {
+    const double curvature_parameter = 2;
+    std::vector<Point_2> control_points = calculate_control_points(path, curvature_parameter);
+    int num_curve_points = path.size() - 1;
+    return bezier_curve(control_points, num_curve_points);
+}
+
 
 //////////////////////////////// TESTING FUNCTION ///////////////////////////////////////
 
@@ -453,4 +616,14 @@ Point_2 DTriangPlanner::transform_to_car_frame(const Point_2& global_pt, double 
     return Point_2(rotated_x, rotated_y);
 }
 
+void DTriangPlanner::print_path_2(const std::vector<std::pair<Point_2, std::array<Point_2, 2>>>& path) {
+    std::cout << "Print anything?" << std::endl;
+    for (const auto& waypoint : path) {
+        const Point_2& position = waypoint.first;
+        const std::array<Point_2, 2>& cones = waypoint.second;
 
+        std::cout << "Waypoint: (" << CGAL::to_double(position.x()) << ", " << CGAL::to_double(position.y()) << ")\n";
+        std::cout << "  Cone 1: (" << CGAL::to_double(cones[0].x()) << ", " << CGAL::to_double(cones[0].y()) << ")\n";
+        std::cout << "  Cone 2: (" << CGAL::to_double(cones[1].x()) << ", " << CGAL::to_double(cones[1].y()) << ")\n";
+    }
+}

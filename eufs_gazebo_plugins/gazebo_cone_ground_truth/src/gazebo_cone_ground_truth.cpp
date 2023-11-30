@@ -397,7 +397,8 @@ namespace gazebo {
       visualization_msgs::Marker marker;
 
       marker.header.stamp = ros::Time::now();
-      marker.header.frame_id = "/base_footprint";
+      // marker.header.frame_id = "/base_footprint";
+      marker.header.frame_id = "base_footprint";
 
       marker.id = id;
 
@@ -412,9 +413,9 @@ namespace gazebo {
       marker.scale.z = 1.5;
 
       if (big) {
-        marker.mesh_resource = "package://eufs_description/meshes/cone_big.dae";
+        marker.mesh_resource = "package://utsma_description/meshes/cone_big.dae";
       } else {
-        marker.mesh_resource = "package://eufs_description/meshes/cone.dae";
+        marker.mesh_resource = "package://utsma_description/meshes/cone.dae";
       }
 
       marker.color.r = red;

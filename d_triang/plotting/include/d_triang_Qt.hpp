@@ -33,6 +33,7 @@ public:
         const std::vector<std::pair<Point_2, Point_2>>& edges,
         const std::vector<std::pair<Point_2, Point_2>>& other_paths, 
         const std::vector<std::pair<Point_2, Point_2>>& best_path,
+        const std::vector<std::pair<Point_2, Point_2>>& smooth_path,
         QWidget* parent = nullptr
         );
         
@@ -71,12 +72,15 @@ private:
     std::vector<std::pair<Point_2, Point_2>> _edges;
     std::vector<std::pair<Point_2, Point_2>> _other_paths;
     std::vector<std::pair<Point_2, Point_2>> _best_path;
+    std::vector<std::pair<Point_2, Point_2>> _smooth_path;
     
     // Geometries ready to plot
     std::vector<QPointF> _plot_location_pts;
     std::vector<std::pair<QPointF, QPointF>> _plot_location_edges;
     std::vector<std::pair<QPointF, QPointF>> _plot_location_other_paths;
     std::vector<std::pair<QPointF, QPointF>> _plot_location_best_path;
+    std::vector<std::pair<QPointF, QPointF>> _plot_location_smooth_path;
+    
 
     double _x_min = std::numeric_limits<double>::max();
     double _x_max = std::numeric_limits<double>::lowest();

@@ -48,6 +48,7 @@ public:
 private:
 
     int _config_num;
+    const bool SMOOTH_PATH = true; 
 
     const std::unordered_map<int, std::string> PATH_MAP = {
         {1, "straight.yaml"},

@@ -21,10 +21,11 @@ PlotWidget::PlotWidget(
     const std::vector<std::pair<Point_2, Point_2>>& edges,
     const std::vector<std::pair<Point_2, Point_2>>& other_paths, 
     const std::vector<std::pair<Point_2, Point_2>>& best_path,
+    const std::vector<std::pair<Point_2, Point_2>>& smooth_path,
     QWidget* parent
     )
     : QWidget{parent}, _points_global{points_global}, _points_local{points_local}, 
-        _edges{edges}, _other_paths{other_paths}, _best_path{best_path} {}
+        _edges{edges}, _other_paths{other_paths}, _best_path{best_path}, _smooth_path{smooth_path} {}
 
 
 void PlotWidget::paintEvent(QPaintEvent *) {
@@ -89,8 +90,14 @@ void PlotWidget::paintEvent(QPaintEvent *) {
         painter.drawLine(path_segment.first, path_segment.second);
     }
 
-
-
+    // Plot the smooth path
+    for (const auto& path_segment : _plot_location_smooth_path){
+        QPen pen;
+        pen.setWidth(2); // width in pixels
+        pen.setColor(QColor(0, 0, 255)); 
+        painter.setPen(pen);
+        painter.drawLine(path_segment.first, path_segment.second);
+    }
 }
 
 
@@ -138,8 +145,8 @@ void PlotWidget::update_bounds(const std::vector<Point_2>& tr_pts) {
 
 void PlotWidget::set_up(){
 
-    Point_2 car_p(0,0);
-    _points_local.push_back(car_p);
+    Point_2 car_pt(0,0);
+    _points_local.push_back(car_pt);
 
     // Location to plot the points on Qt Windows
     std::vector<Point_2> tr_pts;
@@ -161,6 +168,7 @@ void PlotWidget::set_up(){
     _plot_location_edges = scale_segments(_edges);
     _plot_location_other_paths = scale_segments(_other_paths);
     _plot_location_best_path = scale_segments(_best_path);
+    _plot_location_smooth_path = scale_segments(_smooth_path);
 }
 
 
