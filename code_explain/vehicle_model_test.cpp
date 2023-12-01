@@ -301,6 +301,7 @@ void VehicleModel::update(const double dt) {
 
 void VehicleModel::updateState(State& state, Input& input, const double dt) {}
 
+/// NOTE: 
 void VehicleModel::setModelState() {
   double yaw = state_.yaw + offset_.Rot().Yaw();
 

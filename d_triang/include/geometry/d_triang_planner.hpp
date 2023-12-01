@@ -17,16 +17,16 @@
 /**
 @brief Base class for path planners
 
-CONTRACT
+CONTRACT:
     INPUT : A list of cones to be used for planning at that instance
     OUTPUT : A path
         ---- Find a good data structure for them ----
     BEHAVIOUR : ....
 
-USAGE
+USAGE:
     set_cones() -> plan() -> get_best_path()/other getters
 
-ANALYSIS
+ANALYSIS:
     Compromise the computer vision section
         Missing cones
         Incorrect color
@@ -38,13 +38,13 @@ ANALYSIS
         Distance between consecutive cones
         Have cones on both side
 
-TO RESEARCH
+TO RESEARCH:
     How to refine the path certainty other time
     Metrics for performance evaluation
     The path planner takes input from SLAM, but still stores meaningful
         data itself regarding past path
 
-TO EXPLORE
+TO EXPLORE:
     Efficient Data Handling: Ensure your path planner can efficiently process incoming data in real-time. This might involve optimizing data structures for faster access and updates.
         Data Structure & Algorithm: the CGAL lib may have high overhead since it's optimised for large set of poitns not repeated calculation with new set of points every time stamp
         Caching and Reuse: Cache previously calculated paths or path segments that are likely to be reused. When a similar planning scenario occurs, you can quickly retrieve and adapt these paths instead of starting from scratch.
@@ -64,11 +64,12 @@ TO EXPLORE
     
     Concurrency and Threading: Consider using multi-threading or asynchronous programming to handle data processing, path computation, and execution in parallel.
 
-NOTE 
+NOTE:
     The path always stems from the car body
 
-EXPERIMENT RESULT
-    The best path doesn't always have the most points (esp. in case where of missing cones) 
+EXPERIMENTAL INSIGHTS:
+    The path with the highest number of Point_2 is not always the correct path (esp. in the case of missing cones) 
+    The path that 'unlocks' the most cones is not alwasy the correct path (esp. in the case of missing cones)
 
  */
 class DTriangPlanner {
@@ -95,19 +96,20 @@ public:
 
 
     /*
+    PUBLIC FOR TESTING ONLY
     Expand all the possible paths in a bread-first fashion
     */
     void expand(Edge start);
 
     /*
-    
+    PUBLIC FOR TESTING ONLY
     */
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);   
 
     /*
     Catmull-Rom splines pass through each control point (unlike Bézier curves)
 
-    Note very good so optional at the moment
+    Not very good so optional at the moment
     */
     std::vector<Point_2> catmull_rom_spline(const std::vector<Point_2>& waypoints, double t);
 
@@ -142,7 +144,12 @@ public:
     */
     std::vector<std::vector<Point_2>> get_other_paths();
 
-    
+    /*
+    For cone matching algorithm
+    */
+    std::vector<Point_2> get_all_vertices();
+
+
     // Testing function 
     DelaunayTriangulation* get_triangulation_ptr();
     Point_2 transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw);

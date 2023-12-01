@@ -49,9 +49,11 @@ namespace DT{
         // Used to validate expansion and storing paths
         // 
         // Ther's an approach where midpoints are calculated all at once,
-        // and each Node can store a pointer to an existing mid points
+        //  and each Node can store a pointer to an existing mid points
         // This avoids data duplication but efforts would be made to find that midpoint 
-        // to point to given an edge
+        //  to point to given an edge
+        // However, it reduces memory by not storing different variables for the same point,
+        //  maybe easy to find the same point (check if the pointer points to the same memory)
         Pose pose;  
 
         // std::pair<Edge, Edge> traverse_state; // Used to navigate to new node to expand the tree

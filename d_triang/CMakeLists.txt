@@ -121,6 +121,7 @@ catkin_package(
 include_directories(
     include
     include/geometry
+    include/realtime
     ${Boost_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
     ${CGAL_INCLUDE_DIRS}
@@ -135,7 +136,11 @@ include_directories(
 
 ## Declare a C++ library
 add_library(d_triang_planner src/geometry/d_triang_planner.cpp)
+add_library(d_triang_realtime src/realtime/d_triang_realtime.cpp)
+
+
 add_library(geometry_test_fixture test/geometry/geometry_test_fixture.cpp)
+add_library(realtime_test_fixture test/realtime/realtime_test_fixture.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -151,6 +156,8 @@ add_executable(get_next_edges_test test/geometry/get_next_edges_test.cpp)
 add_executable(print_test test/geometry/print_test.cpp )
 add_executable(return_first_edge_test test/geometry/return_first_edge_test.cpp)
 add_executable(expand_test test/geometry/expand_test.cpp)
+
+add_executable(multi_step_test test/realtime/multi_step_test.cpp)
 
 
 
@@ -169,6 +176,9 @@ set_target_properties(return_first_edge_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 set_target_properties(expand_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+set_target_properties(multi_step_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 
@@ -204,6 +214,16 @@ target_link_libraries(expand_test
     geometry_test_fixture 
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
+
+
+
+target_link_libraries(multi_step_test 
+    d_triang_planner
+    d_triang_realtime 
+    geometry_test_fixture 
+    ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
+    gtest_main pthread)
+
 
 
 #############

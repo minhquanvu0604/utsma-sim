@@ -95,21 +95,22 @@ void DTriangPlanner::expand(Edge start_edge) {
     std::pair<Point_2, Point_2> two_pts_first_node = get_points_from_edge(start_edge);
     Point_2 first_node_midpoint = CGAL::midpoint(two_pts_first_node.first, two_pts_first_node.second);
 
-    double first_node_angle_diff = compute_orientation(car_node_ptr->pose.position, first_node_midpoint);
-    first_node_angle_diff = abs(normalize(first_node_angle_diff));
+    double first_node_angle = compute_orientation(car_node_ptr->pose.position, first_node_midpoint);
+    first_node_angle = abs(normalize(first_node_angle));
     
-    std::shared_ptr<DT::Node> first_node_ptr = std::make_shared<DT::Node>(DT::Pose(first_node_midpoint, first_node_angle_diff));
+    std::shared_ptr<DT::Node> first_node_ptr = std::make_shared<DT::Node>(DT::Pose(first_node_midpoint, first_node_angle));
+    first_node_ptr->cones = {two_pts_first_node.first, two_pts_first_node.second};
 
     // DEBUGGING
     std::cout << "FIRST NODE: " << std::endl;
     print_edge_vertices(start_edge);
     std::cout << "Midpoint: " << first_node_midpoint << std::endl;
     std::cout << "Previous point: " << car_node_ptr->pose.position << std::endl;
-    std::cout << "Angle diff: " << first_node_angle_diff << std::endl; 
+    std::cout << "Angle diff: " << first_node_angle << std::endl; 
     std::cout << "=====================================" << std::endl; 
 
-    int passed = 0; // number of next nodes that pass the 'preliminary condtion'
-
+    int passed = 0; // Number of next nodes that pass the 'preliminary condtion'
+    int num_node_checked = 0; // Total number of nodes checked
     
     DT::TraverseState initial_state;
     initial_state.node_ptr = first_node_ptr;
@@ -136,6 +137,8 @@ void DTriangPlanner::expand(Edge start_edge) {
 
         // Examine 2 edges
         for (int i = 1; i < 3; i++){
+
+            num_node_checked++;
 
             Edge& next_new_edge = next_edges.at(i);
 
@@ -194,10 +197,8 @@ void DTriangPlanner::expand(Edge start_edge) {
     }
     std::cout << "FINISHED GENERATING PATHS" << std::endl;
     std::cout << "Passed: " << passed << std::endl;
+    std::cout << "Total number of nodes checked: " << num_node_checked << std::endl;
     print_paths();
-    std::cout << "2222222" << std::endl;
-    std::cout << "_paths_2.size(): " << _paths_2.size() << std::endl;
-
 }
 
 
@@ -227,6 +228,13 @@ DelaunayTriangulation* DTriangPlanner::get_triangulation_ptr() {
 }
 
 
+std::vector<Point_2> DTriangPlanner::get_all_vertices() {
+    std::vector<Point_2> vertices;
+    for (auto vit = _dt.finite_vertices_begin(); vit != _dt.finite_vertices_end(); ++vit) {
+        vertices.push_back(vit->point());
+    }
+    return vertices;
+}
 
 /////////////////// PRIVATE FUNCTIONS ///////////////////////////////////////
 
@@ -345,6 +353,8 @@ void DTriangPlanner::choose_best_path(){
 }
 
 void DTriangPlanner::choose_best_path_2(){
+    
+    // For _best_path_2
     int max_size = 0;
     int index_of_longest = -1;
 
@@ -354,8 +364,21 @@ void DTriangPlanner::choose_best_path_2(){
             index_of_longest = i;
         }
     }
-
     _best_path_2 = _paths_2[index_of_longest];
+
+
+    // For _best_path
+    max_size = 0;
+    index_of_longest = -1;
+
+    for (int i = 0; i < _paths.size(); ++i) {
+        if (_paths[i].size() > max_size) {
+            max_size = _paths[i].size();
+            index_of_longest = i;
+        }
+    }
+    _best_path = _paths[index_of_longest];
+
     
     std::pair<Point_2, std::array<Point_2, 2>> car_node;
     car_node.first = Point_2(0,0);
@@ -443,7 +466,6 @@ std::vector<std::pair<Point_2, std::array<Point_2, 2>>> DTriangPlanner::backtrac
 
     // Reverse the path to get it from root to leaf
     std::reverse(path.begin(), path.end());
-    std::cout << "213222222path_2.size(): " << path.size() << std::endl;
     return path;
 }
 

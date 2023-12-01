@@ -2,7 +2,6 @@
 
 
 int main(int argc, char *argv[]) {
-
     QApplication app(argc, argv); 
 
     DTriangPlot plot = DTriangPlot();
@@ -11,7 +10,7 @@ int main(int argc, char *argv[]) {
     if (argc > 1)
         config_number = std::stoi(argv[1]);
 
-    plot.set_config_num(config_number);    
+    plot.set_config_num(config_number); 
     plot.plot();
     
     return app.exec();
@@ -36,7 +35,7 @@ void DTriangPlot::plot(){
     }
 
     // Best path
-    std::vector<Point_2> best_path = get_best_path();
+    std::vector<Point_2> best_path = get_best_path(); 
     std::vector<std::pair<Point_2, Point_2>> best_path_for_plotting = get_path_for_plotting(best_path);
 
     // Smooth path
@@ -47,7 +46,6 @@ void DTriangPlot::plot(){
         // std::cout << "smooth_best_path size: " << smooth_best_path.size() << std::endl;
         smooth_path_for_plotting = get_path_for_plotting(smooth_best_path); 
     }
-
 
     _widget = std::make_shared<PlotWidget>(_points_global, _points_local, edges, other_paths_for_plotting, best_path_for_plotting, smooth_path_for_plotting);    
     _widget->resize(800, 900); 
@@ -96,8 +94,10 @@ void DTriangPlot::read_cone_config(){
     // Convert to car's frame
     for (Point_2 point_global :_points_global){
         Point_2 p_local = transform_to_car_frame(point_global,car_x,car_y,car_yaw);
+
         // Print out to write unit test
         std::cout << p_local.x() << " , " << p_local.y() << std::endl;
+        
         _local_global_map[p_local] = point_global;
         _points_local.push_back(p_local);
     }
@@ -135,7 +135,7 @@ std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_edges_for_plotting(){
 std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_path_for_plotting(std::vector<Point_2> path){
     std::vector<std::pair<Point_2, Point_2>> edges;
     for (size_t i = 0; i < path.size() - 1; ++i) {
-        edges.push_back(std::make_pair(path[i], path[i + 1]));
+        edges.push_back(std::make_pair(path.at(i), path.at(i + 1)));
     }
     return edges;
 }
