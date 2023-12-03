@@ -42,7 +42,6 @@ namespace gazebo {
   }
 
   // Gazebo plugin functions
-
   void GazeboConeGroundTruth::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf) {
 #if GAZEBO_MAJOR_VERSION >= 8
     this->track_model = _parent->GetWorld()->ModelByName("track");

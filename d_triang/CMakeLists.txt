@@ -7,7 +7,21 @@ project(d_triang)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+
+#find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  #sensor_msgs
+  #std_msgs
+  #nav_msgs
+  #rosbag # Needed to rosbag manipulation
+  roslib # Needed for ros::package::getPath
+  geometry_msgs
+  ackermann_msgs
+  eufs_msgs
+  gazebo_msgs
+)
+
 find_package(CGAL REQUIRED COMPONENTS Core)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(GMP REQUIRED)
@@ -108,8 +122,19 @@ find_package(yaml-cpp REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES d_triang
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
+    CATKIN_DEPENDS 
+    gazebo_msgs
+    roscpp
+    nodelet
+    geometry_msgs
+    eufs_msgs
+    ackermann_msgs
+    tf2_ros
+    tf
+
+    DEPENDS 
+    eufs_msgs 
+    ackermann_msgs
 )
 
 ###########
@@ -122,6 +147,7 @@ include_directories(
     include
     include/geometry
     include/realtime
+    include/ros_integration
     ${Boost_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
     ${CGAL_INCLUDE_DIRS}
@@ -136,16 +162,17 @@ include_directories(
 
 ## Declare a C++ library
 add_library(d_triang_planner src/geometry/d_triang_planner.cpp)
-add_library(d_triang_realtime src/realtime/d_triang_realtime.cpp)
+add_library(d_triang_realtime src/realtime/d_triang_realtime.cpp src/geometry/d_triang_planner.cpp)
+add_library(d_triang_realtime_ros src/ros_integration/d_triang_realtime_ros.cpp src/realtime/d_triang_realtime.cpp src/geometry/d_triang_planner.cpp)
 
-
-add_library(geometry_test_fixture test/geometry/geometry_test_fixture.cpp)
-add_library(realtime_test_fixture test/realtime/realtime_test_fixture.cpp)
+##########add_library(geometry_test_fixture test/geometry/geometry_test_fixture.cpp)
+##########add_library(realtime_test_fixture test/realtime/realtime_test_fixture.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -159,6 +186,7 @@ add_executable(expand_test test/geometry/expand_test.cpp)
 
 add_executable(multi_step_test test/realtime/multi_step_test.cpp)
 
+add_executable(utsma_path_planner src/ros_integration/utsma_path_planner.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -181,48 +209,73 @@ set_target_properties(expand_test PROPERTIES
 set_target_properties(multi_step_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
+# set_target_properties(utsma_path_planner PROPERTIES
+#     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/ros_integration")
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(utsma_path_planner ${utsma_path_planner_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
 
+#Geometry libraries
 target_link_libraries(get_next_edges_test 
     d_triang_planner 
-    geometry_test_fixture 
+    #geometry_test_fixture 
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
 
 target_link_libraries(print_test 
     d_triang_planner 
-    geometry_test_fixture 
+    #geometry_test_fixture 
     ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
     
 target_link_libraries(return_first_edge_test 
     d_triang_planner 
-    geometry_test_fixture 
+    #geometry_test_fixture 
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
 
 target_link_libraries(expand_test 
     d_triang_planner 
-    geometry_test_fixture 
+    #geometry_test_fixture 
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
 
 
-
+# Realtime libraries
 target_link_libraries(multi_step_test 
     d_triang_planner
     d_triang_realtime 
-    geometry_test_fixture 
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
+
+
+# ROS Node
+target_link_libraries(utsma_path_planner 
+    d_triang_planner
+    d_triang_realtime  
+    d_triang_realtime_ros
+    ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} ${catkin_LIBRARIES}
+    pthread)
+
+
+# # Link libraries
+# target_link_libraries(d_triang_realtime_ros 
+#     d_triang_planner
+#     d_triang_realtime  
+#     )
+
+# target_link_libraries(d_triang_realtime 
+#     d_triang_planner  
+#     )
 
 
 

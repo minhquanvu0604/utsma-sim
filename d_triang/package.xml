@@ -33,6 +33,15 @@
   <!-- Examples: -->
   <!-- Use depend as a shortcut for packages that are both build and exec dependencies -->
   <!--   <depend>roscpp</depend> -->
+  <depend>gazebo_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>nodelet</depend>
+  <depend>eufs_msgs</depend>
+  <depend>ackermann_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf</depend>
+
   <!--   Note that this is equivalent to the following: -->
   <!--   <build_depend>roscpp</build_depend> -->
   <!--   <exec_depend>roscpp</exec_depend> -->

@@ -5,13 +5,33 @@ bool DTRealTime::plan_one_step(const std::vector<Point_2>& cones){
     // std::cout << "MATCHING_THRESHOLD" << MATCHING_THRESHOLD << std::endl;
 
     bool match = match_new_cones(cones);
-    if (match) reuse_path();
-    else replan();
+
+    ///////////////////////////////////
+    if (match)
+        std::cout << "MATCHED -------------------------------" << std::endl;
+    else    
+        std::cout << "NO MATCHED -------------------------------" << std::endl;
+    ///////////////////////////////////
+
+    
+    if (match) {
+        reuse_path();
+    }
+    else {
+        replan();
+    }
 
     return match;
 }
 
+/*
+Not only reduces computation but also rejects bad cone pattern readings 
 
+FALSE POSITIVE
+
+FALSE NEGATIVE
+
+*/
 bool DTRealTime::match_new_cones(const std::vector<Point_2>& new_cones){
     
     // If the last step saw too few cones when just recompute
@@ -21,6 +41,16 @@ bool DTRealTime::match_new_cones(const std::vector<Point_2>& new_cones){
         return false;
     }
 
+    int last_cone_in_critical_zone = 0;
+    int new_cone_in_critical_zone = 0;
+
+    for (const auto& new_cone : new_cones) {
+        double car_to_new_cone_dist_sq = pow(CGAL::to_double(new_cone.x()),2) + pow(CGAL::to_double(new_cone.y()),2);
+        bool inside_critical_zone = car_to_new_cone_dist_sq < CRITICAL_RANGE_SQ;
+        if (inside_critical_zone) 
+            new_cone_in_critical_zone++;
+    }
+
     for (const auto& last_cone : _cones){
         // Distance from car to a last cone
         double car_to_last_cone_dist_sq = pow(CGAL::to_double(last_cone.x()),2) + pow(CGAL::to_double(last_cone.y()),2);
@@ -28,12 +58,16 @@ bool DTRealTime::match_new_cones(const std::vector<Point_2>& new_cones){
         
         if (!inside_critical_zone)
             continue;
+        last_cone_in_critical_zone++;
 
         // Find corresponding cones in the new pattern
         // Find nearest new cone
         Point_2 closest_cone;
         double min_dist_sq = std::numeric_limits<double>::max();        
+        
+        
         for (const auto& new_cone : new_cones) {
+
             // Distance from that last cone to one new cone
             double last_cone_to_new_dist_sq = CGAL::to_double(CGAL::squared_distance(last_cone, new_cone));           
             if (last_cone_to_new_dist_sq < min_dist_sq) {
@@ -42,14 +76,22 @@ bool DTRealTime::match_new_cones(const std::vector<Point_2>& new_cones){
             }
         }
 
+        // If any last cone doesn't have a corresponding new cone
         if (min_dist_sq > MATCHING_THRESHOLD){
             // _cones.clear();
             _cones = new_cones;
             return false; // New patter doesn't match
-        }       
+        }               
     }
-    // Matched    
+
     _cones = new_cones;
+
+    // If found new cone in the critical zone, compute triangulation again
+    if (last_cone_in_critical_zone < new_cone_in_critical_zone){
+        return false;
+    }
+    
+    // Matched    
     return true;
 }
 
@@ -70,6 +112,9 @@ void DTRealTime::reuse_path(){
     _path.clear();
 
     std::vector<std::pair<Point_2, std::array<Point_2, 2>>> path = get_best_path_2();
+    // Remove first because it doesn't have cones on its 2 sides, avoid error
+    path.erase(path.begin()); 
+    _path.push_back(Point_2(0,0));
 
     for (auto& waypoint : path){
 
@@ -80,7 +125,7 @@ void DTRealTime::reuse_path(){
         for (int i = 0; i < 2; i++){
             // Find the corresponding new cone of the current old cone
             for (auto& new_cone : _cones){
-                double old_new_dist = CGAL::to_double(CGAL::squared_distance(old_cones[i], new_cone));
+                double old_new_dist = CGAL::to_double(CGAL::squared_distance(old_cones.at(i), new_cone));
                 if (old_new_dist < MATCHING_THRESHOLD){
                     new_cones[i] = new_cone;
                 }

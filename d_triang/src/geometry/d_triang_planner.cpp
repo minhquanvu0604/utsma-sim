@@ -18,7 +18,7 @@ void DTriangPlanner::plan(){
 }
 
 
-void DTriangPlanner::set_cones(std::vector<Point_2> points_local){
+void DTriangPlanner::set_cones(const std::vector<Point_2>& points_local){
         _points_local.clear();
         _points_local = points_local;
 

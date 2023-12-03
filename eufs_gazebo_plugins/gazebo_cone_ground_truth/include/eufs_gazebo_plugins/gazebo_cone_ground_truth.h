@@ -105,7 +105,7 @@ namespace gazebo {
 
     double GaussianKernel(double mu, double sigma);
 
-      // Helper function for parameters
+    // Helper function for parameters
     bool getBoolParameter(sdf::ElementPtr _sdf, const char* element, bool default_value, const char* default_description);
     double getDoubleParameter(sdf::ElementPtr _sdf, const char* element, double default_value, const char* default_description);
     std::string getStringParameter(sdf::ElementPtr _sdf, const char* element, std::string default_value, const char* default_description);

@@ -9,9 +9,7 @@ match_new_cones will be called every time step at the rate of the path planner
 Inside critical zone, all the cones from last step must be matched
 Otherwise, trigger adaptive behavior
     Recompute triangulation 
-    Reject new cones
 
-Use custome Point or Point_2?
 
 USAGE: 
     match_new_cones()
@@ -21,7 +19,13 @@ USAGE:
 
 TO RESEARCH:
     Save cone pattern from one last step or multiple last step and compute moving average/use moving median
-        Re-plan the path would then be possibly less heavy
+        Re-plan the path would then be possibly less heavy?
+    Use custome Point or Point_2?
+
+COMPENSATE COMPUTER VISION:
+    Adaptive Behavior : Replan after a step misses the cones
+        May have mechanism for rejecting bad readings inside match_new_cones (check stability of compvision)
+            Don't reject to many steps
 
 
 **/
@@ -41,7 +45,8 @@ public:
     double get_steering();
 
 
-protected:
+private:
+
     bool match_new_cones(const std::vector<Point_2>& cones);
 
     /*
@@ -58,18 +63,14 @@ protected:
     void replan();
 
 
-
 private:
 
-
-    std::vector<Point_2> _cones;
-    //std::vector<Point_2> _last_cones;
-    
+    std::vector<Point_2> _cones;    
     std::vector<Point_2> _path;
 
 
-
 private:
+
     const double CONST_CAR_VEL = 5.0; // (m/s)
     const int PATH_PLANNING_RATE = 30; // (Hz)
 
@@ -90,11 +91,5 @@ private:
     // Goal must not be too near the car
     const double MIN_DIST_GOAL = 5.0;
 };
-
-
-
-
-
-
 
 #endif

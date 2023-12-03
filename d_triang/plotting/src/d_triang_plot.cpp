@@ -133,6 +133,10 @@ std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_edges_for_plotting(){
 // }
 
 std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_path_for_plotting(std::vector<Point_2> path){
+    
+    if (path.empty())
+        throw std::runtime_error("get_path_for_plotting: Path is empty");
+    
     std::vector<std::pair<Point_2, Point_2>> edges;
     for (size_t i = 0; i < path.size() - 1; ++i) {
         edges.push_back(std::make_pair(path.at(i), path.at(i + 1)));

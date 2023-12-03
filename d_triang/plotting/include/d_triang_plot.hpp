@@ -59,6 +59,8 @@ private:
         {6, "slight_curve_missing_cone2.yaml"},
         {7, "slight_curve_missing_cone3.yaml"},
         {8, "near_steep_turn.yaml"},        
+        {9, "multi_step.yaml"}, // Eufs track
+
     };
 
     std::vector<Point_2> _points_global;

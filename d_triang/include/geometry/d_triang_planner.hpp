@@ -77,7 +77,7 @@ class DTriangPlanner {
 public:
     DTriangPlanner(){}
 
-    void set_cones(std::vector<Point_2> points_local);
+    void set_cones(const std::vector<Point_2>& points_local);
     
     /*
     Main function to perform planning
