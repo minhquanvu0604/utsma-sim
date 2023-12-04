@@ -2,8 +2,6 @@
 
 bool DTRealTime::plan_one_step(const std::vector<Point_2>& cones){
 
-    // std::cout << "MATCHING_THRESHOLD" << MATCHING_THRESHOLD << std::endl;
-
     bool match = match_new_cones(cones);
 
     ///////////////////////////////////
@@ -13,12 +11,11 @@ bool DTRealTime::plan_one_step(const std::vector<Point_2>& cones){
         std::cout << "NO MATCHED -------------------------------" << std::endl;
     ///////////////////////////////////
 
-    
     if (match) {
         reuse_path();
     }
     else {
-        replan();
+        plan_from_scratch();
     }
 
     return match;
@@ -95,7 +92,7 @@ bool DTRealTime::match_new_cones(const std::vector<Point_2>& new_cones){
     return true;
 }
 
-void DTRealTime::replan(){
+void DTRealTime::plan_from_scratch(){
     set_cones(_cones);
     plan();
 
@@ -140,9 +137,12 @@ void DTRealTime::reuse_path(){
 double DTRealTime::get_steering(){
 
     // std::vector<std::pair<Point_2, std::array<Point_2, 2>>> path = get_best_path_2();
+    std::cout << "get_steering path: " << std::endl;
+    print_path(_path);
 
     Point_2 car_pos(0,0);
     Point_2 goal = _path.at(1); // Goal is the midpoint of starting edge
+
     double car_to_goal_dist = CGAL::to_double(CGAL::squared_distance(car_pos, goal));
     // If too near, next point
     if (car_to_goal_dist < MIN_DIST_GOAL)
@@ -154,5 +154,14 @@ double DTRealTime::get_steering(){
 
     // Convert angle different to turning angle (eufs default : -0.52 -> 0.52)
 
+
     return angle_diff; // JUST FOR TESTING
+}
+
+double calculate_steering_angle(double x_goal, double y_goal, double wheelbase) {
+    
+    double theta = std::atan2(y_goal, x_goal);
+    double distance = std::sqrt(x_goal * x_goal + y_goal * y_goal);
+    double steering_angle = std::atan2(2.0 * wheelbase * std::sin(theta), distance);
+    return steering_angle;
 }

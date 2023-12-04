@@ -149,14 +149,22 @@ public:
     */
     std::vector<Point_2> get_all_vertices();
 
+    /*
+    For visualisation
+    */
+    std::vector<std::pair<Point_2, Point_2>> get_edges_for_plotting();
+
 
     // Testing function 
     DelaunayTriangulation* get_triangulation_ptr();
     Point_2 transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw);
-    void print_face_vertices(DelaunayTriangulation::Face_handle face);
-    void print_paths();
-    void print_edge_vertices(const Edge& edge);
+    void print_all_possible_paths();
     bool is_approx_equal(const Point_2& p1, const Point_2& p2, double tolerance); // Also used by test fixture
+
+    // Printing utilities
+    void print_face_vertices(DelaunayTriangulation::Face_handle face);
+    void print_edge_vertices(const Edge& edge);
+    void print_path(const std::vector<Point_2>& path);
     void print_path_2(const std::vector<std::pair<Point_2, std::array<Point_2, 2>>>& path);
 
 

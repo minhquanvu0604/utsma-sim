@@ -198,7 +198,7 @@ void DTriangPlanner::expand(Edge start_edge) {
     std::cout << "FINISHED GENERATING PATHS" << std::endl;
     std::cout << "Passed: " << passed << std::endl;
     std::cout << "Total number of nodes checked: " << num_node_checked << std::endl;
-    print_paths();
+    print_all_possible_paths();
 }
 
 
@@ -235,6 +235,7 @@ std::vector<Point_2> DTriangPlanner::get_all_vertices() {
     }
     return vertices;
 }
+
 
 /////////////////// PRIVATE FUNCTIONS ///////////////////////////////////////
 
@@ -585,19 +586,9 @@ std::vector<Point_2> DTriangPlanner::smooth_path(const std::vector<Point_2>& pat
 
 //////////////////////////////// TESTING FUNCTION ///////////////////////////////////////
 
-void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face) {
-    if (!face->is_valid()) {
-        std::cerr << "Invalid face handle." << std::endl;
-        return;
-    }
 
-    for (int i = 0; i < 3; ++i) {
-        Point_2 vertex = face->vertex(i)->point();
-        std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
-    }
-}
 
-void DTriangPlanner::print_paths() {
+void DTriangPlanner::print_all_possible_paths() {
     std::cout << "Number of paths: " << _paths.size() << std::endl;
 
     for (const auto& path : _paths) {
@@ -609,6 +600,34 @@ void DTriangPlanner::print_paths() {
     }
 }
 
+Point_2 DTriangPlanner::transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw) {
+
+    // Translate the point
+    double translated_x = CGAL::to_double(global_pt.x()) - car_x;
+    double translated_y = CGAL::to_double(global_pt.y()) - car_y;
+
+    // Rotate the point
+    double rotated_x = translated_x * cos(car_yaw) + translated_y * sin(car_yaw);
+    double rotated_y = -translated_x * sin(car_yaw) + translated_y * cos(car_yaw);
+
+    return Point_2(rotated_x, rotated_y);
+}
+
+
+
+//////
+
+void DTriangPlanner::print_face_vertices(DelaunayTriangulation::Face_handle face) {
+    if (!face->is_valid()) {
+        std::cerr << "Invalid face handle." << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        Point_2 vertex = face->vertex(i)->point();
+        std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
+    }
+}
 
 void DTriangPlanner::print_edge_vertices(const Edge& edge) {
     // Extract the face and index from the edge
@@ -624,18 +643,11 @@ void DTriangPlanner::print_edge_vertices(const Edge& edge) {
             << vertex2 << ")" << std::endl;
 }
 
-
-Point_2 DTriangPlanner::transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw) {
-
-    // Translate the point
-    double translated_x = CGAL::to_double(global_pt.x()) - car_x;
-    double translated_y = CGAL::to_double(global_pt.y()) - car_y;
-
-    // Rotate the point
-    double rotated_x = translated_x * cos(car_yaw) + translated_y * sin(car_yaw);
-    double rotated_y = -translated_x * sin(car_yaw) + translated_y * cos(car_yaw);
-
-    return Point_2(rotated_x, rotated_y);
+void DTriangPlanner::print_path(const std::vector<Point_2>& path) {
+    for (const Point_2& point : path) {
+        std::cout << "Point (" << point << ")  ";
+    }
+    std::cout << std::endl;
 }
 
 void DTriangPlanner::print_path_2(const std::vector<std::pair<Point_2, std::array<Point_2, 2>>>& path) {

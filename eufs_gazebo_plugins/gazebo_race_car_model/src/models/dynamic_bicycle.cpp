@@ -39,18 +39,34 @@ public:
   {}
 
 private:
+
+  /**
+   * NOTE: It uses a combination of dynamic (force-based) and kinematic (geometry-based) models 
+   * to predict the vehicle's position, orientation, velocity, and acceleration
+  */
   virtual void updateState(State& state, Input& input, const double dt) {
     double Fz = getNormalForce(state);
 
+    // FyF and FyR are lateral forces at the front and rear of the vehicle, respectively. 
+    // These forces depend on the normal force and whether the wheel is at the front or the rear. 
+    // Lateral forces are crucial for modeling how the vehicle handles turns and corners.
     double FyF = getFy(Fz, true);
     double FyR = getFy(Fz, false);
 
     // Drivetrain Model
+    // Fx is the longitudinal force (force in the direction of travel) calculated by getFx, 
+    // based on the current state and input. 
+    // This force can be influenced by factors like engine power, friction, and aerodynamic drag.
     const double Fx   = getFx(state, input);
+    
     // Dynamics
-    const auto x_dot_dyn  = f(state, input, Fx, FyF, FyR);
-    const auto x_next_dyn = state + x_dot_dyn * dt;
-    state = f_kin_correction(x_next_dyn, state, input, Fx, dt);
+    const auto x_dot_dyn  = f(state, input, Fx, FyF, FyR); // Rate of change of the state variables
+    const auto x_next_dyn = state + x_dot_dyn * dt;  // Calculates the vehicle's next state
+    
+    // The function f_kin_correction adjusts the next state (x_next_dyn) to consider kinematic constraints 
+    // (like maximum steering angle or vehicle dimensions). 
+    // This step helps to blend the dynamic model with more realistic, geometry-based constraints.
+    state = f_kin_correction(x_next_dyn, state, input, Fx, dt); 
 
     // Set the acceleration based on the change in velocity
     state.a_x = x_dot_dyn.v_x;
@@ -59,6 +75,12 @@ private:
     state.validate();
   }
 
+  /**
+  NOTE: 
+  Compute derivative state x_dot - which is the rate of change of the state variables
+  Setting values of x, y, yaw, v_x, v_y and r
+  Leave a_x and a_y zero
+  **/
   State f(const State &x,
                    const Input &u,
                    const double Fx,
@@ -68,13 +90,13 @@ private:
     const double FyR_tot = 2 * FyR;
     const double v_x     = std::max(1.0, x.v_x);
 
-    State x_dot{};
-    x_dot.x   = std::cos(x.yaw) * x.v_x - std::sin(x.yaw) * x.v_y;
-    x_dot.y   = std::sin(x.yaw) * x.v_x + std::cos(x.yaw) * x.v_y;
-    x_dot.yaw = x.r;
-    x_dot.v_x = (x.r * x.v_y) + (Fx - std::sin(u.delta) * FyF_tot) / param_.inertia.m;
-    x_dot.v_y = ((std::cos(u.delta) * FyF_tot) + FyR_tot) / param_.inertia.m - (x.r * v_x);
-    x_dot.r  = (std::cos(u.delta) * FyF_tot * param_.kinematic.l_F - FyR_tot * param_.kinematic.l_R)
+    State x_dot{}; // Rate of change
+    x_dot.x   = std::cos(x.yaw) * x.v_x - std::sin(x.yaw) * x.v_y; // Rate of change in x
+    x_dot.y   = std::sin(x.yaw) * x.v_x + std::cos(x.yaw) * x.v_y; // Rate of change in y
+    x_dot.yaw = x.r; // Rate of change in yaw
+    x_dot.v_x = (x.r * x.v_y) + (Fx - std::sin(u.delta) * FyF_tot) / param_.inertia.m; // Rate of change in v_x
+    x_dot.v_y = ((std::cos(u.delta) * FyF_tot) + FyR_tot) / param_.inertia.m - (x.r * v_x); // Rate of change in v_y
+    x_dot.r  = (std::cos(u.delta) * FyF_tot * param_.kinematic.l_F - FyR_tot * param_.kinematic.l_R) // // Rate of change in r
             / param_.inertia.I_z;
 
     x_dot.a_x = 0;

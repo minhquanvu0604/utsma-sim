@@ -36,8 +36,9 @@ public:
     /*
     Planning workflow
     */
-    bool plan_one_step(const std::vector<Point_2>& cones);
+    virtual bool plan_one_step(const std::vector<Point_2>& cones);
 
+    // void plan_one_step(const std::vector<Point_2>& cones);
 
     /*
     Get the steering value to publish
@@ -45,7 +46,7 @@ public:
     double get_steering();
 
 
-private:
+protected:
 
     bool match_new_cones(const std::vector<Point_2>& cones);
 
@@ -59,8 +60,9 @@ private:
 
     /*
     If not matched, perform triangulation planner from scratch 
+    Include: set_cones() -> plan() -> add to _path
     */
-    void replan();
+    void plan_from_scratch();
 
 
 private:
@@ -69,7 +71,7 @@ private:
     std::vector<Point_2> _path;
 
 
-private:
+protected:
 
     const double CONST_CAR_VEL = 5.0; // (m/s)
     const int PATH_PLANNING_RATE = 30; // (Hz)
