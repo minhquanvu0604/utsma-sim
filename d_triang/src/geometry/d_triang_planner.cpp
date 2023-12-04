@@ -19,8 +19,15 @@ void DTriangPlanner::plan(){
 
 
 void DTriangPlanner::set_cones(const std::vector<Point_2>& points_local){
+        
+        _paths.clear();
+        _paths_2.clear();
+        // Don't have to clear _best_path and _best_path_2
+
         _points_local.clear();
+
         _points_local = points_local;
+
 
         // for (const auto& point : _points_local) {
         //     _pts_status.emplace_back(point, false);
@@ -28,6 +35,9 @@ void DTriangPlanner::set_cones(const std::vector<Point_2>& points_local){
     }
 
 Edge DTriangPlanner::triangulate(){
+
+    _dt.clear();
+
     // Triangulation computed here
     _dt.insert(_points_local.begin(), _points_local.end()); 
 
@@ -84,8 +94,6 @@ Edge DTriangPlanner::triangulate(){
  *      Save rejected paths -> prevent the case where the good path is rejected by the last segment
 */
 void DTriangPlanner::expand(Edge start_edge) {
-
-    _paths.clear();
 
     // A queue to store the instantaneous traversing progress 
     // Each has 2 edges represents a state of traverse progress

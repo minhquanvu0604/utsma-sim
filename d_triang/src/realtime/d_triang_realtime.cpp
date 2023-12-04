@@ -94,11 +94,19 @@ bool DTRealTime::match_new_cones(const std::vector<Point_2>& new_cones){
 }
 
 void DTRealTime::plan_from_scratch(){
+
+    // std::cout << "NUMBER OF CONES TO PLAN FROM SCRATCH: " << _current_cones.size() << std::endl;
+    // print_path(_current_cones);
+    // for (auto it = _dt.finite_vertices_begin(); it != _dt.finite_vertices_end(); ++it) {
+    //     const Point_2& vertex = it->point();
+    //     std::cout << "Vertex: (" << CGAL::to_double(vertex.x()) << ", " << CGAL::to_double(vertex.y()) << ")" << std::endl;
+    // }
+
     set_cones(_current_cones);
     plan();
 
-    // Clear here!!
-    _best_path.clear();
+    // // Clear here!!
+    // _best_path.clear();
 
     std::vector<std::pair<Point_2, std::array<Point_2, 2>>> path = get_best_path_2();
     for (auto& waypoint : path){
