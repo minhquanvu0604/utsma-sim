@@ -31,7 +31,7 @@ FALSE NEGATIVE
 
 */
 bool DTRealTime::match_new_cones(const std::vector<Point_2>& new_cones){
-    
+
     // If the last step saw too few cones when just recompute
     if (_current_cones.size() < 4){
         _current_cones = new_cones;

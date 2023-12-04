@@ -14,7 +14,7 @@ void DTriangPlanner::plan(){
     expand(first_edge);
     // choose_best_path();
     choose_best_path_2();
-
+    std::cout << "exit plan()" << std::endl;
 }
 
 
@@ -201,6 +201,7 @@ void DTriangPlanner::expand(Edge start_edge) {
     std::cout << "Passed: " << passed << std::endl;
     std::cout << "Total number of nodes checked: " << num_node_checked << std::endl;
     print_all_possible_paths();
+    // std::cout << "exit expand()" << std::endl;
 }
 
 
@@ -376,6 +377,11 @@ void DTriangPlanner::choose_best_path_2(){
             index_of_longest = i;
         }
     }
+    // Important to have this 
+    // If index = -1, C++ exception with description "std::bad_alloc" thrown in the test body
+    if (index_of_longest == -1) 
+        throw std::runtime_error("_paths is empty");
+
     _best_path_2 = _paths_2[index_of_longest];
 
 
@@ -389,6 +395,8 @@ void DTriangPlanner::choose_best_path_2(){
             index_of_longest = i;
         }
     }
+    if (index_of_longest == -1)
+        throw std::runtime_error("_paths is empty");
     _best_path = _paths[index_of_longest];
 
     

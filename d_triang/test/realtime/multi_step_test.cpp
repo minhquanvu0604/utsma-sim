@@ -82,17 +82,17 @@ TEST_F(DTRealTimeTestFixture, SecondStepMissCone) {
     std::cout << std::endl;
 
     std::cout << "====START PLANNING===="<< std::endl;
-    std::cout << "STEP 1"<< std::endl;
+    std::cout << "STEP 1"<< std::endl << std::endl;
     auto start_time_step1 = std::chrono::high_resolution_clock::now(); 
     bool step1_match = planner.plan_one_step(cone_layout_step1);
     auto end_time_step1 = std::chrono::high_resolution_clock::now(); 
 
-    std::cout << "STEP 2"<< std::endl;
+    std::cout << "STEP 2"<< std::endl << std::endl;
     auto start_time_step2 = std::chrono::high_resolution_clock::now(); 
     bool step2_match = planner.plan_one_step(cone_layout_step2);
     auto end_time_step2 = std::chrono::high_resolution_clock::now(); 
     
-    std::cout << "STEP 3"<< std::endl;
+    std::cout << "STEP 3"<< std::endl << std::endl;
     auto start_time_step3 = std::chrono::high_resolution_clock::now(); 
     bool step3_match = planner.plan_one_step(cone_layout_step3);
     auto end_time_step3 = std::chrono::high_resolution_clock::now(); 
