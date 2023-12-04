@@ -85,6 +85,8 @@ Edge DTriangPlanner::triangulate(){
 */
 void DTriangPlanner::expand(Edge start_edge) {
 
+    _paths.clear();
+
     // A queue to store the instantaneous traversing progress 
     // Each has 2 edges represents a state of traverse progress
     // They represent the previous and current edge respectively
@@ -236,6 +238,15 @@ std::vector<Point_2> DTriangPlanner::get_all_vertices() {
     return vertices;
 }
 
+std::vector<std::pair<Point_2, Point_2>> DTriangPlanner::get_edges_for_plotting(){
+    // Get the edges
+    std::vector<std::pair<Point_2, Point_2>> edges;
+    for (auto it = _dt.finite_edges_begin(); it != _dt.finite_edges_end(); ++it) {
+        Kernel::Segment_2 segment = _dt.segment(it);
+        edges.emplace_back(segment.start(), segment.end());
+    }
+    return edges;
+}
 
 /////////////////// PRIVATE FUNCTIONS ///////////////////////////////////////
 

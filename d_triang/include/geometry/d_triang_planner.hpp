@@ -169,10 +169,10 @@ public:
 
 
 protected:
-
     DelaunayTriangulation _dt;
     std::vector<Point_2> _points_local;
-    
+
+private:    
     // All the possible paths found, each vector of Point_2 represents a path
     //
     // Just node location

@@ -21,13 +21,13 @@ public:
 
     void execution_loop();
 
-    bool plan_one_step(const std::vector<Point_2>& cones) override;
+    void plan_one_step_ros_debug(const std::vector<Point_2>& cones);
 
 
 private:
 
-    visualization_msgs::Marker create_triangulation_edge_marker(const std::vector<std::pair<Point_2, Point_2>>& edges);
-
+    visualization_msgs::MarkerArray create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges);
+    visualization_msgs::Marker create_path_marker(const std::vector<Point_2>& path, double red, double green, double blue, double alpha);
 
 
 private:

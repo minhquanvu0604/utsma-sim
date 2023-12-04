@@ -40,7 +40,7 @@ public:
     /*
      * Get the edges for plotting
     */
-    std::vector<std::pair<Point_2, Point_2>> get_edges_for_plotting();
+    // std::vector<std::pair<Point_2, Point_2>> get_edges_for_plotting();
 
     std::vector<std::pair<Point_2, Point_2>> get_path_for_plotting(std::vector<Point_2> path);
 
@@ -60,6 +60,7 @@ private:
         {7, "slight_curve_missing_cone3.yaml"},
         {8, "near_steep_turn.yaml"},        
         {9, "multi_step.yaml"}, // Eufs track
+        {10, "starting_position_sim.yaml"}
 
     };
 

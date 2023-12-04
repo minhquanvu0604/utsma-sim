@@ -112,15 +112,6 @@ void DTriangPlot::update_global_points(){
     }
 }
 
-std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_edges_for_plotting(){
-    // Get the edges
-    std::vector<std::pair<Point_2, Point_2>> edges;
-    for (auto it = _dt.finite_edges_begin(); it != _dt.finite_edges_end(); ++it) {
-        Kernel::Segment_2 segment = _dt.segment(it);
-        edges.emplace_back(segment.start(), segment.end());
-    }
-    return edges;
-}
 
 // std::vector<std::pair<Point_2, Point_2>> DTriangPlot::get_other_paths_for_plotting(std::vector<std::vector<Point_2>> paths){
 //     std::vector<std::pair<Point_2, Point_2>> segments;

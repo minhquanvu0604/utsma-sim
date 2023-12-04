@@ -27,6 +27,8 @@ COMPENSATE COMPUTER VISION:
         May have mechanism for rejecting bad readings inside match_new_cones (check stability of compvision)
             Don't reject to many steps
 
+NOTE: 
+runtime_error may throw if the vector are emtpy 
 
 **/
 class DTRealTime : public DTriangPlanner {
@@ -35,15 +37,23 @@ public:
 
     /*
     Planning workflow
+    Returns bool for unit testing only
     */
-    virtual bool plan_one_step(const std::vector<Point_2>& cones);
+    bool plan_one_step(const std::vector<Point_2>& cones);
 
     // void plan_one_step(const std::vector<Point_2>& cones);
 
     /*
     Get the steering value to publish
     */
-    double get_steering();
+    // double get_steering();
+
+    /*
+    GPT version
+    */
+    double get_steering_angle(double x_goal, double y_goal);
+
+    std::vector<Point_2> get_path();
 
 
 protected:
@@ -65,13 +75,16 @@ protected:
     void plan_from_scratch();
 
 
-private:
+protected:
 
-    std::vector<Point_2> _cones;    
-    std::vector<Point_2> _path;
+    std::vector<Point_2> _incoming_cones; // Should hand if this is empty
+    std::vector<Point_2> _current_cones;
+    std::vector<Point_2> _best_path;
 
 
 protected:
+
+    const double WHEELBASE = 1.580;
 
     const double CONST_CAR_VEL = 5.0; // (m/s)
     const int PATH_PLANNING_RATE = 30; // (Hz)
