@@ -105,8 +105,8 @@ void DTRealTime::plan_from_scratch(){
     set_cones(_current_cones);
     plan();
 
-    // // Clear here!!
-    // _best_path.clear();
+    // Clear here!!
+    _best_path.clear();
 
     std::vector<std::pair<Point_2, std::array<Point_2, 2>>> path = get_best_path_2();
     for (auto& waypoint : path){

@@ -125,7 +125,7 @@ void DTRealTimeROSWrapper::plan_one_step_ros_debug(const std::vector<Point_2>& c
     plan_from_scratch();
 
 
-    std::cout << "Path to compute steering: " ;
+    std::cout << "Path to compute steering: " << std::endl;
     print_path(_best_path);
     std::cout << std::endl;
 

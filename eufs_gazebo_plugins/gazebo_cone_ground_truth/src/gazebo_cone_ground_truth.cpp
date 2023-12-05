@@ -407,6 +407,11 @@ namespace gazebo {
       marker.pose.position.x = cones[i].point.x;
       marker.pose.position.y = cones[i].point.y;
 
+      marker.pose.orientation.x = 0.0;
+      marker.pose.orientation.y = 0.0;
+      marker.pose.orientation.z = 0.0;
+      marker.pose.orientation.w = 1.0;
+
       marker.scale.x = 1.5;
       marker.scale.y = 1.5;
       marker.scale.z = 1.5;

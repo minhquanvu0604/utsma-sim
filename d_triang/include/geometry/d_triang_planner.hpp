@@ -43,6 +43,7 @@ TO RESEARCH:
     Metrics for performance evaluation
     The path planner takes input from SLAM, but still stores meaningful
         data itself regarding past path
+    ***Take advantage of color of the cones
 
 TO EXPLORE:
     Efficient Data Handling: Ensure your path planner can efficiently process incoming data in real-time. This might involve optimizing data structures for faster access and updates.

@@ -67,7 +67,7 @@
 
   <group if="$(eval arg('rviz'))">
     <!-- Launch RViz -->
-    <node name="rviz" pkg="rviz" type="rviz"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find utsma_description)/config/rviz/utsma.rviz"/>
   </group>
 
   <!-- Start rqt robot steering and ros can sim module -->

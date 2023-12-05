@@ -14,7 +14,7 @@ typedef CGAL::Segment_2<Kernel> Segment;
 // DelaunayTriangulation::Face_handle Face_handle; // somehow doesn't work
 
 
-namespace DT{
+namespace DT {
 
     struct Pose{
         Point_2 position;
@@ -114,6 +114,18 @@ namespace DT{
     // struct Path{
 
     // }
-
 }
+
+namespace DTC {
+
+    struct Cone {
+        Cone(Point_2 point, int color);
+        // Cone(double x, double y, int color) : 
+        Point_2 point;
+        int color; // 0 is blue-left, 1 is yellow-right
+    };
+    
+}
+
+
 #endif

@@ -29,6 +29,7 @@ COMPENSATE COMPUTER VISION:
 
 NOTE: 
 runtime_error may throw if the vector are emtpy 
+Rembember to process previous data before replanning a new set
 
 **/
 class DTRealTime : public DTriangPlanner {
