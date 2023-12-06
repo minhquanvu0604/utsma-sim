@@ -165,6 +165,9 @@ add_library(d_triang_planner src/geometry/d_triang_planner.cpp)
 add_library(d_triang_realtime src/realtime/d_triang_realtime.cpp src/geometry/d_triang_planner.cpp)
 add_library(d_triang_realtime_ros src/ros_integration/d_triang_realtime_ros.cpp src/realtime/d_triang_realtime.cpp src/geometry/d_triang_planner.cpp)
 
+add_library(d_triang_planner_color_light src/geometry/d_triang_planner_color_light.cpp)
+
+
 ##########add_library(geometry_test_fixture test/geometry/geometry_test_fixture.cpp)
 ##########add_library(realtime_test_fixture test/realtime/realtime_test_fixture.cpp)
 
@@ -185,6 +188,9 @@ add_executable(return_first_edge_test test/geometry/return_first_edge_test.cpp)
 add_executable(expand_test test/geometry/expand_test.cpp)
 
 add_executable(multi_step_test test/realtime/multi_step_test.cpp)
+
+
+add_executable(process_group_1_test test/color/process_group_1_test.cpp)
 
 add_executable(utsma_path_planner src/ros_integration/utsma_path_planner.cpp)
 
@@ -209,8 +215,8 @@ set_target_properties(expand_test PROPERTIES
 set_target_properties(multi_step_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
-# set_target_properties(utsma_path_planner PROPERTIES
-#     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/ros_integration")
+set_target_properties(process_group_1_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 
 ## Add cmake target dependencies of the executable
@@ -224,7 +230,7 @@ add_dependencies(utsma_path_planner ${utsma_path_planner_EXPORTED_TARGETS} ${cat
 #   ${catkin_LIBRARIES}
 # )
 
-#Geometry libraries
+#Geometry 
 target_link_libraries(get_next_edges_test 
     d_triang_planner 
     #geometry_test_fixture 
@@ -250,12 +256,19 @@ target_link_libraries(expand_test
     gtest_main pthread)
 
 
-# Realtime libraries
+# Realtime 
 target_link_libraries(multi_step_test 
     d_triang_planner
     d_triang_realtime 
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     gtest_main pthread)
+
+
+# Color
+target_link_libraries(process_group_1_test 
+    d_triang_planner_color_light 
+    ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
+    pthread)
 
 
 # ROS Node

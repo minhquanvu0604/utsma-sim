@@ -14,15 +14,17 @@ typedef CGAL::Segment_2<Kernel> Segment;
 // DelaunayTriangulation::Face_handle Face_handle; // somehow doesn't work
 
 
+struct Pose{
+    Point_2 position;
+    double yaw;
+
+    Pose(Point_2 position, double yaw) : position{position}, yaw{yaw} {}
+    Pose(double x, double y, double yaw) : position{Point_2(x, y)}, yaw{yaw} {}
+};
+
 namespace DT {
 
-    struct Pose{
-        Point_2 position;
-        double yaw;
 
-        Pose(Point_2 position, double yaw) : position{position}, yaw{yaw} {}
-        Pose(double x, double y, double yaw) : position{Point_2(x, y)}, yaw{yaw} {}
-    };
 
     /*
     Store information of each node
@@ -60,7 +62,7 @@ namespace DT {
         std::shared_ptr<Node> parent_ptr;
         std::vector<std::shared_ptr<Node>> children_ptrs;
 
-        // Similar to Pose's Point_2, can be a pointer to Segment or two pointers to Vertex
+        // // Similar to Pose's Point_2, can be a pointer to Segment or two pointers to Vertex
         std::array<Point_2, 2> cones;
 
 
@@ -116,15 +118,41 @@ namespace DT {
     // }
 }
 
-namespace DTC {
+namespace DTCL {
 
     struct Cone {
-        Cone(Point_2 point, int color);
-        // Cone(double x, double y, int color) : 
+        Cone(Point_2 point, int color) : point(point), color(color) {}
+        
         Point_2 point;
         int color; // 0 is blue-left, 1 is yellow-right
     };
+
+    struct Node {
+        Pose pose;  
+
+        std::shared_ptr<Node> parent_ptr;
+        std::vector<std::shared_ptr<Node>> children_ptrs;
+
+        // // // Similar to Pose's Point_2, can be a pointer to Segment or two pointers to Vertex
+        // std::array<Point_2, 2> cones;
+
+
+
+        Node(const Pose& p) : pose{p} {}
+        Node(double x, double y, double yaw) : pose{Pose(x, y , yaw)} {}
+    };
     
+    struct TraverseState{
+
+        TraverseState() = default;
+        TraverseState(std::shared_ptr<Node> node, Edge current_edge, Edge previous_edge)
+            : node_ptr{node}, current_edge{current_edge}, previous_edge{previous_edge} {}
+
+        std::shared_ptr<Node> node_ptr;
+        Edge current_edge;    
+        Edge previous_edge;
+        
+    };
 }
 
 

@@ -11,7 +11,7 @@
 #include "d_triang_types.hpp"
 
 // typedef DT::Node Node;
-typedef DT::Pose Pose;
+// typedef DT::Pose Pose;
 
 
 Point_2 transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw) {

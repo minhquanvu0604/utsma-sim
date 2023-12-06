@@ -14,7 +14,7 @@ void DTriangPlanner::plan(){
     expand(first_edge);
     // choose_best_path();
     choose_best_path_2();
-    std::cout << "exit plan()" << std::endl;
+    // std::cout << "exit plan()" << std::endl;
 }
 
 
@@ -100,7 +100,7 @@ void DTriangPlanner::expand(Edge start_edge) {
     // They represent the previous and current edge respectively
     std::deque<DT::TraverseState> traverse_progress;
 
-    std::shared_ptr<DT::Node> car_node_ptr = std::make_shared<DT::Node>(DT::Pose(0,0,0));
+    std::shared_ptr<DT::Node> car_node_ptr = std::make_shared<DT::Node>(Pose(0,0,0));
 
     std::pair<Point_2, Point_2> two_pts_first_node = get_points_from_edge(start_edge);
     Point_2 first_node_midpoint = CGAL::midpoint(two_pts_first_node.first, two_pts_first_node.second);
@@ -108,7 +108,7 @@ void DTriangPlanner::expand(Edge start_edge) {
     double first_node_angle = compute_orientation(car_node_ptr->pose.position, first_node_midpoint);
     first_node_angle = abs(normalize(first_node_angle));
     
-    std::shared_ptr<DT::Node> first_node_ptr = std::make_shared<DT::Node>(DT::Pose(first_node_midpoint, first_node_angle));
+    std::shared_ptr<DT::Node> first_node_ptr = std::make_shared<DT::Node>(Pose(first_node_midpoint, first_node_angle));
     first_node_ptr->cones = {two_pts_first_node.first, two_pts_first_node.second};
 
     // DEBUGGING
@@ -179,7 +179,7 @@ void DTriangPlanner::expand(Edge start_edge) {
             // 'Preliminary condtion' to accept the next node 
             // Loose condition to reduce creating insensible paths
             // After creating all complete paths that pass this condtion, they are compared for the best one
-            if (abs(angle_diff) > M_PI/4){
+            if (angle_diff > M_PI/4){
                 std::cout << "REJECTED" << std::endl;
                 std::cout << "=====================================" << std::endl;
                 continue;
@@ -189,7 +189,7 @@ void DTriangPlanner::expand(Edge start_edge) {
             passed++;
 
             // Create new node, the node is created here and only here
-            std::shared_ptr<DT::Node> new_node_ptr = std::make_shared<DT::Node>(DT::Pose(midpoint, midpoint_angle));
+            std::shared_ptr<DT::Node> new_node_ptr = std::make_shared<DT::Node>(Pose(midpoint, midpoint_angle));
             // Register this node
             // Connect this node to last node
             new_node_ptr->parent_ptr = last_node_ptr;

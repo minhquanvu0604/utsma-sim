@@ -25,20 +25,28 @@ include_directories(${Boost_INCLUDE_DIRS})
 #include_directories(${GMP_INCLUDE_DIRS})
 
 # Add executable
-add_executable(${PROJECT_NAME} src/d_triang_plot.cpp)
+add_executable(d_triang_plot src/d_triang_plot.cpp)
+add_executable(d_triang_plot_color src/d_triang_plot_color.cpp)
+
+
 
 add_library(d_triang_planner ../src/geometry/d_triang_planner.cpp)
+add_library(d_triang_planner_color_light ../src/geometry/d_triang_planner_color_light.cpp)
+
 add_library(d_triang_Qt src/d_triang_Qt.cpp)
 
 
+
+
 # Link against CGAL, Boost, and GMP libraries
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(d_triang_plot
     CGAL::CGAL 
     ${Boost_LIBRARIES} 
     #${GMP_LIBRARIES} 
     ${YAML_CPP_LIBRARIES}
     d_triang_planner
     d_triang_Qt
+    Qt5::Widgets
     )
 
 target_link_libraries(
@@ -46,3 +54,12 @@ target_link_libraries(
     Qt5::Widgets
 )
 
+target_link_libraries(d_triang_plot_color
+    CGAL::CGAL 
+    ${Boost_LIBRARIES} 
+    #${GMP_LIBRARIES} 
+    ${YAML_CPP_LIBRARIES}
+    d_triang_planner_color_light
+    d_triang_Qt
+    Qt5::Widgets
+    )

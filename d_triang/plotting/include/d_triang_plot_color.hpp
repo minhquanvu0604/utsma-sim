@@ -1,5 +1,5 @@
-#ifndef D_TRIANG_PLOT_H
-#define D_TRIANG_PLOT_H
+#ifndef D_TRIANG_PLOT_COLOR_H
+#define D_TRIANG_PLOT_COLOR_H
 
 #include <iostream>
 #include <vector>
@@ -8,14 +8,14 @@
 #include <CGAL/point_generators_2.h>
 #include <yaml-cpp/yaml.h>
 
-#include "d_triang_planner.hpp"
+#include "d_triang_planner_color_light.hpp"
 #include "d_triang_Qt.hpp"
 
 
-class DTriangPlot : public DTriangPlanner {
+class DTriangPlotColor : public DTriangPlannerColorLight {
 
 public:
-    DTriangPlot();
+    DTriangPlotColor();
 
     /*
      * Main function to plot
@@ -42,7 +42,7 @@ public:
      * After triangulation, the elements in local points are rearranged 
      * Update the global points to match with them
     */
-    void update_global_points();
+    void update_order();
 
     /*
      * Get the edges for plotting
@@ -55,42 +55,35 @@ public:
 private:
 
     int _config_num;
-    bool _color_mode;
+    bool SMOOTH_PATH = true; 
 
-    const bool SMOOTH_PATH = true; 
-
-    const std::unordered_map<int, std::string> PATH_MAP = {
-        {1, "straight.yaml"},
-        {2, "straight_with_stretch_p.yaml"},
-        {3, "straight_missing_cone.yaml"}, // Fail
-        {4, "slight_curve.yaml"},
-        {5, "slight_curve_missing_cone1.yaml"}, // Fail
-        {6, "slight_curve_missing_cone2.yaml"},
-        {7, "slight_curve_missing_cone3.yaml"},
-        {8, "near_steep_turn.yaml"},        
-        {9, "multi_step1_1.yaml"}, // Eufs track
-        {10, "multi_step1_3.yaml"},
-        {11, "starting_position_sim.yaml"}
-    };
 
     const std::unordered_map<int, std::string> PATH_MAP_COLOR = {
+        {1, "slight_curve_color.yaml"},
+        {2, "near_steep_turn_color.yaml"},
+        {3, "only_blue_color.yaml"}
+
+        
+        
     };
 
 
 
-    // COLORBLIND
+    // // COLORBLIND
+    
+    // // Create map for global and corresponding local point
+    // std::map<Point_2,Point_2> _local_global_map;
+
     std::vector<Point_2> _points_global;
-    // Create map for global and corresponding local point
+
+    // std::vector<DTCL::Cone> _cones_global; // Set by yaml
+    std::vector<DTCL::Cone> _cones_local; // To input to planner
+
+
     std::map<Point_2,Point_2> _local_global_map;
-
-
-    // COLOR
-    std::vector<DTCL::Cone> _cones_global;
-    std::map<Point_2,DTCL::Cone> _local_global_cone_map;
 
     std::shared_ptr<PlotWidget> _widget;
 
 
 };
-
 #endif
