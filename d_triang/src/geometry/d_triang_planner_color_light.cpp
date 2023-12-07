@@ -255,6 +255,11 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
     double nearest_distance = std::numeric_limits<double>::max(), second_nearest_distance = std::numeric_limits<double>::max();
 
     for (auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
+        
+        // Boundaries for the points
+        if (abs(CGAL::to_double(v->point().y())) > 10)
+            continue;
+        
         double distance = CGAL::to_double(CGAL::squared_distance(v->point(), starting_pt));
 
         if (distance < nearest_distance) {
@@ -342,6 +347,9 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
 
     traverse_progress.push_back(initial_state);
 
+    bool is_first_edge = true; /////////////////////
+    int first_edge_reject = 0;
+
     while (!traverse_progress.empty()) {
 
         DTCL::TraverseState current_state = traverse_progress.front();
@@ -391,6 +399,10 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
             // Loose condition to reduce creating insensible paths
             // After creating all complete paths that pass this condtion, they are compared for the best one
             if (abs(angle_diff) > M_PI/4){
+                
+                if (is_first_edge)
+                    first_edge_reject++;
+                
                 std::cout << "REJECTED" << std::endl;
                 std::cout << "=====================================" << std::endl;
                 continue;
@@ -415,6 +427,18 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
 
             std::cout << "=====================================" << std::endl; 
         }    
+        
+        // Prevent first edge wrong side
+        if (is_first_edge && first_edge_reject == 2){
+
+
+
+
+        }        
+
+        is_first_edge = false;
+
+
         std::cout << "-----------------------------------" << std::endl; 
     }
     std::cout << "FINISHED GENERATING PATHS" << std::endl;
