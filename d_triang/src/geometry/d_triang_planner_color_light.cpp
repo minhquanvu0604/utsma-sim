@@ -50,10 +50,10 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
 
     // Get cones of same color as the first cones
     std::vector<DTCL::Cone> group_1;
-    for (int i = 1; i < sorted_cones.size(); i++){
+    for (int i = 0; i < sorted_cones.size(); i++){
         if (sorted_cones.at(i).color == nearest_color){
             // Filter out cones form irrelevant paths segment on the far 2 sides
-            if (abs(CGAL::to_double(sorted_cones.at(i).point.y())) > TRACK_WIDTH*2 && 
+            if (abs(CGAL::to_double(sorted_cones.at(i).point.y())) > TRACK_WIDTH*2 && /////////////// NEEDS TO TUNE THIS !!
                 abs(CGAL::to_double(sorted_cones.at(i).point.x())) < TRACK_WIDTH*2)
                 std::cout << "\033[33m[WARNING] Outlying cones detected\033[0m" << std::endl;
             else 
@@ -82,7 +82,8 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
 
     // // // GROUP 2 // // // 
     // The rest elements from sorted_cones
-    std::vector<DTCL::Cone> group_2(sorted_cones.begin() + group_1.size() + 1, sorted_cones.end());
+    std::cout << "group_1.size(): " << group_1.size() << std::endl;
+    std::vector<DTCL::Cone> group_2(sorted_cones.begin() + group_1.size(), sorted_cones.end());
 
     std::cout << "Cones group 2::::::::::::::::::::::::::: " << std::endl;
     print_cones(group_2);
@@ -207,7 +208,7 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1(const std::vector
 
 std::vector<Point_2> DTriangPlannerColorLight::process_group_2(const std::vector<DTCL::Cone>& group_2, const Point_2& starting_pt){
     
-    if (group_2.empty()){
+    if (group_2.size() < 2){
         std::vector<Point_2> empty;
         return empty;
     }
@@ -431,11 +432,21 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
         // Prevent first edge wrong side
         if (is_first_edge && first_edge_reject == 2){
 
+            DelaunayTriangulation::Face_handle face = current_state.current_edge.first;
+            int index = current_state.current_edge.second;
 
+            // The opposite edge is the same edge in the neighboring face
+            DelaunayTriangulation::Face_handle neighbor_face = face->neighbor(index);
+            int neighbor_index = _dt.mirror_index(face, index);
+            Edge mirror_edge(neighbor_face, neighbor_index);
 
+            DTCL::TraverseState recover_state;  
+            recover_state.node_ptr = next_node_ptr;
+            recover_state.current_edge = mirror_edge;
+            recover_state.previous_edge = Edge();
 
+            traverse_progress.push_back(recover_state);
         }        
-
         is_first_edge = false;
 
 
@@ -530,22 +541,27 @@ std::vector<Edge> DTriangPlannerColorLight::get_next_edges(Edge current_edge, Ed
         // There may be circumstances where the current_edge is not inifinite but 
         // current_edge.first is still inifinite 
         if (_dt.is_infinite(new_face)){
+
+            int new_index = _dt.mirror_index(new_face, current_edge.second);
+
             new_face = current_edge.first->neighbor(current_edge.second);
             // std::cout << "new_face:" << std::endl;
             // print_face_vertices(new_face);
 
-            // In this case we have to find the correct edge index
-            int new_index = -1;
-            for (int i = 0; i < 3; ++i) {
-                Edge possible_edge(new_face, i);
-                if (are_edges_equal(possible_edge, current_edge)) {
-                    new_index = i;
-                    break;
-                }
-            }
-            if (new_index == -1) {
-                throw std::runtime_error("Could not find the edge in the new face.");
-            }
+            // // In this case we have to find the correct edge index
+            // int new_index = -1;
+            // for (int i = 0; i < 3; ++i) {
+            //     Edge possible_edge(new_face, i);
+            //     if (are_edges_equal(possible_edge, current_edge)) {
+            //         new_index = i;
+            //         break;
+            //     }
+            // }
+            // if (new_index == -1) {
+            //     throw std::runtime_error("Could not find the edge in the new face.");
+            // }
+
+            
 
             edge0 = Edge(new_face, new_index);
             edge1 = Edge(new_face, (new_index + 1) % 3);
