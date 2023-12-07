@@ -89,6 +89,11 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
     print_cones(group_2);
 
     std::vector<Point_2> path_group_2 = process_group_2(group_2, path_group_1.back());
+    if (path_group_2.empty()){
+        std::cout << "path_group_2 is empty" << std::endl;
+        print_cones(sorted_cones);
+        throw std::runtime_error("!");
+    }
 
     _ultimate_path = path_group_1;
     _ultimate_path.insert(_ultimate_path.end(), path_group_2.begin(), path_group_2.end());
@@ -659,6 +664,9 @@ std::vector<Point_2> DTriangPlannerColorLight::backtrack_path(const std::shared_
 // If index = -1, C++ exception with description "std::bad_alloc" thrown in the test body
 void DTriangPlannerColorLight::choose_best_path(std::vector<std::vector<Point_2>> complete_paths){
     
+    if (complete_paths.empty())
+        return;
+
     int max_size = 0;
     int index_of_longest = -1;
 
@@ -671,9 +679,11 @@ void DTriangPlannerColorLight::choose_best_path(std::vector<std::vector<Point_2>
 
     // Important to have this 
     // If index = -1, C++ exception with description "std::bad_alloc" thrown in the test body
-    if (index_of_longest == -1) 
-        throw std::runtime_error("_paths is empty");
-
+    // if (index_of_longest == -1) {
+    //     throw std::runtime_error("_paths is empty");
+    //     return;
+    // }
+        
     _best_path_group_2 = complete_paths.at(index_of_longest);
 
     _other_paths_group_2.clear();

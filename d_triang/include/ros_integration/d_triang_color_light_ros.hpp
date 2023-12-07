@@ -1,5 +1,5 @@
-#ifndef D_TRIANG_REALTIME_ROS_H
-#define D_TRIANG_REALTIME_ROS_H
+#ifndef D_TRIANG_PLANNER_COLOR_LIGHT_ROS_H
+#define D_TRIANG_PLANNER_COLOR_LIGHT_ROS_H
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
@@ -8,23 +8,23 @@
 #include <eufs_msgs/ConeArrayWithCovariance.h>
 #include <geometry_msgs/Point.h>
 
-#include "d_triang_realtime.hpp"
+#include "d_triang_planner_color_light.hpp"
 #include "ackermann_msgs/AckermannDriveStamped.h"
 
 /*
 The car is in the main thread
 */
-class DTRealTimeROSWrapper : public DTRealTime {
+class DTriangPlannerColorLightROSWrapper : public DTriangPlannerColorLight {
 
 public:
 
-    DTRealTimeROSWrapper(ros::NodeHandle nh);
+    DTriangPlannerColorLightROSWrapper(ros::NodeHandle nh);
 
     void cone_array_callback(const eufs_msgs::ConeArrayWithCovariance::ConstPtr& msg);
 
     void execution_loop();
 
-    void plan_one_step_ros_debug(const std::vector<Point_2>& cones);
+    // void plan_one_step_ros_debug(const std::vector<Point_2>& cones);
 
 
 private:
@@ -47,6 +47,10 @@ private:
     ros::Publisher _pub_marker;
 
     ros::Rate path_planning_rate;
+
+
+    // Data
+    std::vector<DTCL::Cone> _incoming_cones;
 
 };
 

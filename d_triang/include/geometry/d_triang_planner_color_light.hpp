@@ -153,9 +153,8 @@ private:
     void print_cones(const std::vector<DTCL::Cone>& cones);
 
 
-
-
-private: 
+protected: 
+    const double PATH_PLANNING_RATE = 30;
     double TRACK_WIDTH = 3.0;
     
     // All the possible paths found, each vector of Point_2 represents a path
