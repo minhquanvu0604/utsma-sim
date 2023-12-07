@@ -10,11 +10,12 @@ project(learning_joy)
 find_package(catkin REQUIRED COMPONENTS
   joy
   roscpp
+  ackermann_msgs
 )
 
 ## Declare the package dependencies
 catkin_package(
-  CATKIN_DEPENDS joy roscpp
+  CATKIN_DEPENDS joy roscpp ackermann_msgs
 )
 
 ## Specify the include directories

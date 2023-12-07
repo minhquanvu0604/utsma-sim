@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <ackermann_msgs/AckermannDrive.h>
+#include <ackermann_msgs/AckermannDriveStamped.h>
 
 namespace utsma
 {
@@ -12,10 +12,18 @@ namespace utsma
     class TwistToAckermannConverter
     {
     public:
-      static ackermann_msgs::AckermannDrive 
+      TwistToAckermannConverter(ros::NodeHandle nh);
+      ~TwistToAckermannConverter();
+
+      static ackermann_msgs::AckermannDriveStamped
       convert(const geometry_msgs::Twist twist, const double vehicle_length);
 
     protected:
+      ros::NodeHandle nh_;
+      ros::Subscriber twist_sub_;
+      ros::Publisher ackermann_pub_;
+
+      void twistCallback(const geometry_msgs::Twist::ConstPtr& msg);
     };
   }
 }
