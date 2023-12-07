@@ -35,6 +35,8 @@ The digram illustrates the hierarchy of launch files and xacro for robot descrip
 
 [`eufs_msgs`](https://gitlab.com/eufs/eufs_msgs/-/tree/ros1?ref_type=heads) - branch ros1
 
+cgal `sudo apt install libcgal-dev`
+
 ## External Links
 
 University of Technology Sydney:
