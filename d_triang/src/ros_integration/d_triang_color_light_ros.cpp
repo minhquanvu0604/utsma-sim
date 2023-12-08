@@ -34,12 +34,12 @@ void DTriangPlannerColorLightROSWrapper::cone_array_callback(const eufs_msgs::Co
 
     std::vector<DTCL::Cone> cones_in;
     for (const eufs_msgs::ConeWithCovariance& cone : yellow_cones){
-        Point_2 point = cone.point;
+        Point_2 point(cone.point.x, cone.point.y);
         DTCL::Cone cone_type(point,1);
         cones_in.push_back(cone_type);
     }
     for (const eufs_msgs::ConeWithCovariance& cone : blue_cones){
-        Point_2 point = cone.point;
+        Point_2 point(cone.point.x, cone.point.y);
         DTCL::Cone cone_type(point,0);
         cones_in.push_back(cone_type);
     }

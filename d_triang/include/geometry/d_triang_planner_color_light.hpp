@@ -115,7 +115,7 @@ protected:
     
     // Only for computing triangulation, not used for group 1 or path reusing
     // Set as member variable for easy retrieveing inside test
-    std::vector<Point_2> _local_pts_for_triang; 
+    std::vector<Point_2> _local_pts_for_triang; // REALLY NEEDED? PROB NOT
 
     /**
     For visualisation

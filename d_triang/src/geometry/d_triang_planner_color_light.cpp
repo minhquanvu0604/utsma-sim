@@ -62,7 +62,7 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
         else break;
     }
     
-    if (group_1.size() == 1)
+    if (group_1.size() < 3 && sorted_cones.size() >= 3)
         group_1.clear(); // Group 1 doesn't exist    
 
     std::cout << "Cones both groups::::::::::::::::::::::::::: " << std::endl;
@@ -82,15 +82,17 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
 
     // // // GROUP 2 // // // 
     // The rest elements from sorted_cones
-    std::cout << "group_1.size(): " << group_1.size() << std::endl;
+    // std::cout << "group_1.size(): " << group_1.size() << std::endl;
     std::vector<DTCL::Cone> group_2(sorted_cones.begin() + group_1.size(), sorted_cones.end());
+    if (group_2.size() < 4)
+        group_2.clear();
 
     std::cout << "Cones group 2::::::::::::::::::::::::::: " << std::endl;
     print_cones(group_2);
 
     std::vector<Point_2> path_group_2 = process_group_2(group_2, path_group_1.back());
-    if (path_group_2.empty()){
-        std::cout << "path_group_2 is empty" << std::endl;
+    if (path_group_2.empty() && path_group_1.size() == 1){
+        std::cout << "\033[33m[WARNING] path_group_2 is empty\033[0m" << std::endl;
         print_cones(sorted_cones);
         throw std::runtime_error("!");
     }
@@ -243,15 +245,17 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_2(const std::vector
 void DTriangPlannerColorLight::triangulate(const std::vector<DTCL::Cone>& group_2){
 
     _dt.clear();
-    _local_pts_for_triang.clear();
 
+    std::vector<Point_2> input_vect;
     // DTCL
     for (auto& cone : group_2){
-        _local_pts_for_triang.push_back(cone.point);
+        input_vect.push_back(cone.point);
     }
 
     // Triangulation computed here
-    _dt.insert(_local_pts_for_triang.begin(), _local_pts_for_triang.end()); 
+    _dt.insert(input_vect.begin(), input_vect.end()); 
+
+    // _local_pts_for_triang.clear();
 }
 
 
@@ -350,8 +354,23 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
     initial_state.node_ptr = next_node_ptr;
     initial_state.current_edge = first_edge;
     initial_state.previous_edge = Edge();
-
     traverse_progress.push_back(initial_state);
+
+
+    // Add another state that has the mirrored edge to first_edge
+    DelaunayTriangulation::Face_handle face_m = first_edge.first;
+    int index_m = first_edge.second;
+
+    // The opposite edge is the same edge in the neighboring face
+    DelaunayTriangulation::Face_handle neighbor_face = face_m->neighbor(index_m);
+    int neighbor_index = _dt.mirror_index(face_m, index_m);
+    Edge mirror_edge_m(neighbor_face, neighbor_index);
+
+    DTCL::TraverseState initial_state_with_mirrored_edge;
+    initial_state_with_mirrored_edge.node_ptr = next_node_ptr;
+    initial_state_with_mirrored_edge.current_edge = mirror_edge_m;
+    initial_state_with_mirrored_edge.previous_edge = Edge();
+    traverse_progress.push_back(initial_state_with_mirrored_edge);
 
     bool is_first_edge = true; /////////////////////
     int first_edge_reject = 0;
@@ -404,14 +423,37 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
             // 'Preliminary condtion' to accept the next node 
             // Loose condition to reduce creating insensible paths
             // After creating all complete paths that pass this condtion, they are compared for the best one
-            if (abs(angle_diff) > M_PI/4){
-                
-                if (is_first_edge)
-                    first_edge_reject++;
-                
-                std::cout << "REJECTED" << std::endl;
-                std::cout << "=====================================" << std::endl;
-                continue;
+            if (angle_diff > M_PI/4){
+
+                // if (is_first_edge)
+                //     // Looser condition for first edge
+                //     if (angle_diff > M_PI_2 || midpoint_angle > M_PI_2){
+                //         first_edge_reject++;
+                //         std::cout << "REJECTED FIRST EDGE" << std::endl;
+                //         std::cout << "=====================================" << std::endl;
+                //         continue;
+                //     }  
+                //     else{
+                //         std::cout << "FIRST EDGE COMPENSATED" << std::endl;
+                //         std::cout << "=====================================" << std::endl;
+                //     }
+                // else {
+                //     std::cout << "REJECTED" << std::endl;
+                //     std::cout << "=====================================" << std::endl;
+                //     continue;
+                // }       
+                if (is_first_edge){
+                    if (angle_diff > M_PI){
+                        std::cout << "REJECTED FIRST EDGE" << std::endl;
+                        std::cout << "=====================================" << std::endl;
+                        continue;
+                    }
+                }
+                else {
+                    std::cout << "REJECTED" << std::endl;
+                    std::cout << "=====================================" << std::endl;
+                    continue;                    
+                }
             }
 
             std::cout << "PASSED" << std::endl;
@@ -434,24 +476,24 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
             std::cout << "=====================================" << std::endl; 
         }    
         
-        // Prevent first edge wrong side
-        if (is_first_edge && first_edge_reject == 2){
+        // // Prevent first edge wrong side
+        // if (is_first_edge && first_edge_reject == 2){
 
-            DelaunayTriangulation::Face_handle face = current_state.current_edge.first;
-            int index = current_state.current_edge.second;
+        //     DelaunayTriangulation::Face_handle face = current_state.current_edge.first;
+        //     int index = current_state.current_edge.second;
 
-            // The opposite edge is the same edge in the neighboring face
-            DelaunayTriangulation::Face_handle neighbor_face = face->neighbor(index);
-            int neighbor_index = _dt.mirror_index(face, index);
-            Edge mirror_edge(neighbor_face, neighbor_index);
+        //     // The opposite edge is the same edge in the neighboring face
+        //     DelaunayTriangulation::Face_handle neighbor_face = face->neighbor(index);
+        //     int neighbor_index = _dt.mirror_index(face, index);
+        //     Edge mirror_edge(neighbor_face, neighbor_index);
 
-            DTCL::TraverseState recover_state;  
-            recover_state.node_ptr = next_node_ptr;
-            recover_state.current_edge = mirror_edge;
-            recover_state.previous_edge = Edge();
+        //     DTCL::TraverseState recover_state;  
+        //     recover_state.node_ptr = next_node_ptr;
+        //     recover_state.current_edge = mirror_edge;
+        //     recover_state.previous_edge = Edge();
 
-            traverse_progress.push_back(recover_state);
-        }        
+        //     traverse_progress.push_back(recover_state);
+        // }        
         is_first_edge = false;
 
 

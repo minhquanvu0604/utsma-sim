@@ -166,6 +166,7 @@ add_library(d_triang_realtime src/realtime/d_triang_realtime.cpp src/geometry/d_
 add_library(d_triang_realtime_ros src/ros_integration/d_triang_realtime_ros.cpp src/realtime/d_triang_realtime.cpp src/geometry/d_triang_planner.cpp)
 
 add_library(d_triang_planner_color_light src/geometry/d_triang_planner_color_light.cpp)
+add_library(d_triang_color_light_ros src/ros_integration/d_triang_color_light_ros.cpp src/geometry/d_triang_planner_color_light.cpp)
 
 
 ##########add_library(geometry_test_fixture test/geometry/geometry_test_fixture.cpp)
@@ -275,7 +276,8 @@ target_link_libraries(process_group_1_test
 target_link_libraries(utsma_path_planner 
     d_triang_planner
     d_triang_realtime  
-    d_triang_realtime_ros
+    #d_triang_realtime_ros
+    d_triang_color_light_ros
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} ${catkin_LIBRARIES}
     pthread)
 

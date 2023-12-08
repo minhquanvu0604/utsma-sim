@@ -22,7 +22,6 @@ DTriangPlotColor::DTriangPlotColor() : _config_num{1} {}
 
 void DTriangPlotColor::plot(){
     
-
     read_cone_config_color();        
     set_cones(_cones_local);
     update_order();
@@ -50,6 +49,8 @@ void DTriangPlotColor::plot(){
     //     // std::cout << "smooth_best_path size: " << smooth_best_path.size() << std::endl;
     //     smooth_path_for_plotting = get_path_for_plotting(smooth_best_path); 
     // }
+
+    // std::cout << "_local_pts_for_triang.size()xxxxxxxxxxxxxxxxxxxxxxxxxx" << _local_pts_for_triang.size() << std::endl;
 
     _widget = std::make_shared<PlotWidget>(_points_global, _local_pts_for_triang, edges, other_paths_for_plotting, best_path_for_plotting, smooth_path_for_plotting);    
     _widget->resize(800, 900); 
@@ -99,6 +100,7 @@ void DTriangPlotColor::read_cone_config_color(){
     } else 
         std::cerr << "Car pose not found in YAML file." << std::endl;
 
+    _local_pts_for_triang.clear();
     // Convert to car's frame
     for (auto& cone_global : cones_global){
         Point_2 p_local = transform_to_car_frame(cone_global.point,car_x,car_y,car_yaw);

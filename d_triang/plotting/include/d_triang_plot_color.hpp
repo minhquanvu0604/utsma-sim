@@ -61,10 +61,13 @@ private:
     const std::unordered_map<int, std::string> PATH_MAP_COLOR = {
         {1, "slight_curve_color.yaml"},
         {2, "near_steep_turn_color.yaml"},
-        {3, "only_blue_color.yaml"}
-
-        
-        
+        {3, "only_blue_color.yaml"},
+        {4, "only_blue_2.yaml"},
+        {5, "steep_turn_color.yaml"},
+        {6, "error_2.yaml"},
+        {7, "error_3.yaml"},
+        {8, "error_4.yaml"},
+        {9, "neighbor_not_face_handle_error.yaml"}
     };
 
 

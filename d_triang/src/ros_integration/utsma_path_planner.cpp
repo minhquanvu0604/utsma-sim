@@ -1,5 +1,4 @@
-#include "d_triang_realtime_ros.hpp"
-
+#include "d_triang_color_light_ros.hpp"
 
 int main(int argc, char **argv)
 {
@@ -9,7 +8,7 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh;
 
-    std::shared_ptr<DTRealTimeROSWrapper> utsma_path_planner = std::make_shared<DTRealTimeROSWrapper>(nh);
+    std::shared_ptr<DTriangPlannerColorLightROSWrapper> utsma_path_planner = std::make_shared<DTriangPlannerColorLightROSWrapper>(nh);
 
     ros::spin();
 
