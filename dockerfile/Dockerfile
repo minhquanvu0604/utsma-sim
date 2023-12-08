@@ -15,8 +15,7 @@ RUN apt update && apt install -y \
     qtquickcontrols2-5-dev && \
     pip3 install flask waitress opencv-python numpy datetime
 
-# Configure ur_ws
-RUN mkdir -p utsma_ws/src && \
-    cd utsma_ws && \
-    catkin init && \
-    echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+# ROS dependency
+RUN apt update && apt install -y \
+    ros-noetic-ackermann-msgs \
+    libcgal-dev
