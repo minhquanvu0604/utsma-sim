@@ -17,29 +17,19 @@ The car is in the main thread
 class DTriangPlannerColorLightROSWrapper : public DTriangPlannerColorLight {
 
 public:
-
     DTriangPlannerColorLightROSWrapper(ros::NodeHandle nh);
 
     void cone_array_callback(const eufs_msgs::ConeArrayWithCovariance::ConstPtr& msg);
 
     void execution_loop();
 
-    // void plan_one_step_ros_debug(const std::vector<Point_2>& cones);
-
-
 private:
-
     visualization_msgs::MarkerArray create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges);
     visualization_msgs::Marker create_path_marker(const std::vector<Point_2>& path, double red, double green, double blue, double alpha);
 
 
 private:
-
     ros::NodeHandle _nh;
-
-    // ros::Subscriber subOdom_;
-    // ros::Subscriber subGoal_;
-    // ros::Subscriber subLaser_;
 
     ros::Subscriber _sub_cone_array;
 
@@ -48,10 +38,8 @@ private:
 
     ros::Rate path_planning_rate;
 
-
     // Data
     std::vector<DTCL::Cone> _incoming_cones;
-
 };
 
 #endif

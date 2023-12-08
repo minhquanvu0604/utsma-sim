@@ -70,8 +70,6 @@ private:
         {9, "neighbor_not_face_handle_error.yaml"},
         {10, "vertices_not_connected_by_an_edge_error.yaml"},
         {11, "error_core_dump.yaml"}, // 3 yellow cones followed by 6 blue cones -> complicated
-
-        
     };
 
 

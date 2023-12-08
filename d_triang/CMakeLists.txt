@@ -7,6 +7,7 @@ project(d_triang)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+set(OpenCV_DIR "/usr/lib/x86_64-linux-gnu/cmake/opencv4")
 
 #find_package(catkin REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
@@ -20,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   ackermann_msgs
   eufs_msgs
   gazebo_msgs
+  OpenCV REQUIRED
 )
 
 find_package(CGAL REQUIRED COMPONENTS Core)
@@ -155,6 +157,7 @@ include_directories(
     ${GTEST_INCLUDE_DIRS}
     ${GMP_INCLUDE_DIR}
     ${MPFR_INCLUDE_DIR}
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 
@@ -167,6 +170,8 @@ add_library(d_triang_realtime_ros src/ros_integration/d_triang_realtime_ros.cpp 
 
 add_library(d_triang_planner_color_light src/geometry/d_triang_planner_color_light.cpp)
 add_library(d_triang_color_light_ros src/ros_integration/d_triang_color_light_ros.cpp src/geometry/d_triang_planner_color_light.cpp)
+
+
 
 
 ##########add_library(geometry_test_fixture test/geometry/geometry_test_fixture.cpp)
@@ -190,10 +195,14 @@ add_executable(expand_test test/geometry/expand_test.cpp)
 
 add_executable(multi_step_test test/realtime/multi_step_test.cpp)
 
-
 add_executable(process_group_1_test test/color/process_group_1_test.cpp)
+add_executable(offset_path_test test/color/offset_path_test.cpp)
+add_executable(offset_path_plot test/color/offset_path_plot.cpp)
+
 
 add_executable(utsma_path_planner src/ros_integration/utsma_path_planner.cpp)
+
+
 
 
 ## Rename C++ executable without prefix
@@ -218,6 +227,14 @@ set_target_properties(multi_step_test PROPERTIES
 
 set_target_properties(process_group_1_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+set_target_properties(offset_path_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+set_target_properties(offset_path_plot PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+    
 
 
 ## Add cmake target dependencies of the executable
@@ -271,15 +288,34 @@ target_link_libraries(process_group_1_test
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
     pthread)
 
+target_link_libraries(offset_path_test 
+    d_triang_planner_color_light 
+    ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} 
+    pthread)
+
+target_link_libraries(offset_path_plot 
+    d_triang_planner_color_light 
+    ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} ${OpenCV_LIBRARIES}
+    pthread)
+
+    
+
 
 # ROS Node
 target_link_libraries(utsma_path_planner 
-    d_triang_planner
-    d_triang_realtime  
+    # d_triang_planner
+    # d_triang_realtime  
     #d_triang_realtime_ros
     d_triang_color_light_ros
     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} ${catkin_LIBRARIES}
     pthread)
+
+
+# Offset line
+# target_link_libraries(offset_path 
+#     d_triang_planner_color_light
+#     ${GTEST_LIBRARIES} ${GMP_LIBRARIES} ${MPFR_LIBRARIES} ${YAML_CPP_LIBRARIES} ${catkin_LIBRARIES}
+#     pthread)
 
 
 # # Link libraries

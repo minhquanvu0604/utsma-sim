@@ -2,48 +2,82 @@
 #include <cmath>
 
 
-// /*
-//  * Top level function that handles planning 
-//  *
-//  * Workflow:
-//  * Expand -> Preliminary condition -> Add to path -> Complete path
-//  * -> Repeat -> Evaluate paths 
-// */
-// void DTriangPlannerColorLight::plan(){
-//     Edge first_edge = triangulate();
-//     expand(first_edge);
-//     // choose_best_path();
-//     choose_best_path_2();
-//     std::cout << "exit plan()" << std::endl;
-// }
-
-
 bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_local){
 
     if (cones_local.empty())
         return false;
 
-    // _paths.clear();
-    // _paths_2.clear();
-    // Don't have to clear _best_path and _best_path_2 since they assigned to new vector
-
-    // _cones_local.clear();
-
-    // _cones_local = cones_local;
-
-
-    // std::sort(cones_local.begin(), cones_local.end(), [](const DTCL::Cone& a, const DTCL::Cone& b) {
-    //     return a.point.x() < b.point.x();
-    // });
     std::vector<DTCL::Cone> sorted_cones = cones_local; // Assuming cones_local is a vector of const DTCL::Cone
     std::sort(sorted_cones.begin(), sorted_cones.end(), [](const DTCL::Cone& a, const DTCL::Cone& b) {
         return a.point.x() < b.point.x();
     });
 
 
+    // // // GROUP 1 // // // 
+    int nearest_color = sorted_cones.at(0).color;
 
+    // Get cones of same color as the first cones
+    std::vector<DTCL::Cone> group_1;
+    for (int i = 0; i < sorted_cones.size(); i++){
+        if (sorted_cones.at(i).color == nearest_color){
+            // Filter out cones form irrelevant paths segment on the far 2 sides
+            if (abs(CGAL::to_double(sorted_cones.at(i).point.y())) > TRACK_WIDTH*2 && /////////////// NEEDS TO TUNE THIS !!
+                abs(CGAL::to_double(sorted_cones.at(i).point.x())) < TRACK_WIDTH*2)
+                std::cout << "\033[33m[WARNING] Outlying cones detected\033[0m" << std::endl;
+            else 
+                group_1.push_back(sorted_cones.at(i));
+        }
+        else break;
+    }
+    
+    if (group_1.size() < 3 && sorted_cones.size() >= 3)
+        group_1.clear(); // Group 1 doesn't exist    
 
-    // Separate into 2 segments
+    // path_group_1 contains at least the car point
+    std::vector<Point_2> path_group_1 = process_group_1_mtc(group_1, nearest_color);
+    // // // // // //
+
+    // // // GROUP 2 // // // 
+    // The rest elements from sorted_cones
+    // std::cout << "group_1.size(): " << group_1.size() << std::endl;
+    _group_2 = std::vector<DTCL::Cone>(sorted_cones.begin() + group_1.size(), sorted_cones.end());
+
+    // Check if group 2 have mixed cones
+    int total_color = 0;
+    for (const auto& cone : _group_2){
+        total_color += cone.color;
+    }
+
+    // The group 2 is full of cones of the same color, ignore
+    std::vector<Point_2> path_group_2;
+    if (!(total_color == 0 || total_color == _group_2.size())){ 
+        if (_group_2.size() < 4)
+            _group_2.clear();
+
+        path_group_2 = process_group_2(path_group_1.back());
+        if (path_group_2.empty() && path_group_1.size() == 1){
+            std::cout << "\033[33m[WARNING] path_group_2 is empty\033[0m" << std::endl;
+            print_cones(sorted_cones);
+            throw std::runtime_error("!");
+        }        
+    }
+
+    // Combine 
+    _ultimate_path = path_group_1;
+    _ultimate_path.insert(_ultimate_path.end(), path_group_2.begin(), path_group_2.end());
+
+    return true;
+}
+
+bool DTriangPlannerColorLight::set_cones_debug(const std::vector<DTCL::Cone>& cones_local){
+
+    if (cones_local.empty())
+        return false;
+
+    std::vector<DTCL::Cone> sorted_cones = cones_local; // Assuming cones_local is a vector of const DTCL::Cone
+    std::sort(sorted_cones.begin(), sorted_cones.end(), [](const DTCL::Cone& a, const DTCL::Cone& b) {
+        return a.point.x() < b.point.x();
+    });
 
     // // // GROUP 1 // // // 
     int nearest_color = sorted_cones.at(0).color;
@@ -71,7 +105,7 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
     print_cones(group_1);
 
     // path_group_1 contains at least the car point
-    std::vector<Point_2> path_group_1 = process_group_1(group_1, nearest_color);
+    std::vector<Point_2> path_group_1 = process_group_1_mtc(group_1, nearest_color);
     
     std::cout << "Path from group 1: " << path_group_1.size() << " element(s)" << std::endl;
     print_path(path_group_1);
@@ -113,15 +147,6 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
     return true;
 }
 
-// bool DTriangPlannerColorLight::compare_cones_by_x(const DTCL::Cone& a, const DTCL::Cone& b) {
-//     return a.point.x() < b.point.x();
-// }
-
-
-
-
-// GROUP 1
-
 std::vector<Point_2> DTriangPlannerColorLight::process_group_1(const std::vector<DTCL::Cone>& group_1, int nearest_color){
     
     std::vector<Point_2> path_group_1;
@@ -151,11 +176,9 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1(const std::vector
     }
     else throw std::runtime_error("Cone color is a value other than 0 and 1");
 
-
     // std::cout << "path_group_1.size(): " << path_group_1.size() << std::endl;
     // for (auto pt : path_group_1)
     //     std::cout << pt << std::endl;
-
 
     // Find the pt to connect with car pt that complies to angle condition
     // int first_waypt_id = -1;
@@ -163,25 +186,48 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1(const std::vector
         
         // Angle from first car to pt in offset_line 
         double angle = abs((compute_orientation(car_pt, path_group_1.at(i))));
-        // std::cout << "Waypoint: " << path_group_1.at(i) << "  angle: " << angle << std::endl;
 
         // 'Preliminary condtion'
         if (angle > M_PI/4){
             path_group_1.erase(path_group_1.begin() + i);
             i--;
-            // std::cout << "Erased" << std::endl;
             continue;
         }
         else 
             break;
-    
+
         // Yellow text
         std::cout << "\033[33m[WARNING] Cannot find first waypoint in group 1\033[0m" << std::endl;
     }    
-
     return path_group_1;
 }
 
+std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::vector<DTCL::Cone>& group_1, int nearest_color){
+    
+    std::vector<Point_2> path_group_1;
+    Point_2 car_pt(0,0);
+    path_group_1.push_back(car_pt); // Include the car position
+    
+    if (group_1.empty())
+        return path_group_1;    
+
+    std::vector<Point_2> cone_as_pt;
+    for (auto cone : group_1){
+        cone_as_pt.push_back(cone.point);
+    }
+
+    int cone_color = group_1.at(0).color;
+    bool is_offset_left;
+    if (cone_color)
+        is_offset_left = true;
+    else 
+        is_offset_left = false;
+
+    path_group_1 = offset_polyline(cone_as_pt, TRACK_WIDTH/2, is_offset_left);
+    path_group_1.insert(path_group_1.begin(), car_pt); 
+
+    return path_group_1;
+}
 
 std::vector<Point_2> DTriangPlannerColorLight::process_group_2(const Point_2& starting_pt){
     std::vector<Point_2> empty;
@@ -189,30 +235,21 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_2(const Point_2& st
     if (_group_2.size() < 2)
         return empty;
 
-    std::cout << "1" << std::endl;
-
     triangulate(_group_2);
     Edge first_edge = get_first_edge(starting_pt);
     
     if (first_edge == Edge())
         return empty;
 
-    std::cout << "2" << std::endl;
-
     std::vector<std::vector<Point_2>> complete_paths = expand(first_edge, starting_pt);
-
-    std::cout << "3" << std::endl;
-
     choose_best_path(complete_paths);
-
-    std::cout << "4" << std::endl;
 
     return _best_path_group_2;
 }
 
 void DTriangPlannerColorLight::triangulate(const std::vector<DTCL::Cone>& group_2){
-
     std::vector<Point_2> input_vect;
+    
     // DTCL
     for (auto& cone : group_2){
         input_vect.push_back(cone.point);
@@ -220,10 +257,7 @@ void DTriangPlannerColorLight::triangulate(const std::vector<DTCL::Cone>& group_
 
     // Triangulation computed here
     _dt.insert(input_vect.begin(), input_vect.end()); 
-
-    // _local_pts_for_triang.clear();
 }
-
 
 Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
 
@@ -251,9 +285,9 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
             break;
         }
     }
+
     if (nearest_color == -1)
         throw std::runtime_error("Can't find nearest cone color");
-
 
     // Find the second nearest vertex with a different color
     for (auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
@@ -282,10 +316,8 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
         }
     }
 
-    
-    if (second_nearest == DelaunayTriangulation::Vertex_handle())
-        std::cout << "fuq" << std::endl;
-
+    // if (second_nearest == DelaunayTriangulation::Vertex_handle())
+    //     std::cout << "No vertex assigned for second nearest" << std::endl;
 
     // From 2 nearest vertices, find the corresponding edge
     Edge nearest_edge;
@@ -340,7 +372,118 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
     
     std::shared_ptr<DTCL::Node> next_node_ptr = std::make_shared<DTCL::Node>(Pose(next_node_midpt, next_node_angle));
 
-    // next_node_ptr->cones = {two_pts_first_node.first, two_pts_first_node.second};
+    ///////
+    int passed = 0; // Number of next nodes that pass the 'preliminary condtion'
+    int num_node_checked = 0; // Total number of nodes checked
+    ///////
+
+    DTCL::TraverseState initial_state;
+    initial_state.node_ptr = next_node_ptr;
+    initial_state.current_edge = first_edge;
+    initial_state.previous_edge = Edge();
+    traverse_progress.push_back(initial_state);
+
+
+    // Add another state that has the mirrored edge to first_edge
+    DelaunayTriangulation::Face_handle face_m = first_edge.first;
+    int index_m = first_edge.second;
+
+    // The opposite edge is the same edge in the neighboring face
+    DelaunayTriangulation::Face_handle neighbor_face = face_m->neighbor(index_m);
+    int neighbor_index = _dt.mirror_index(face_m, index_m);
+    Edge mirror_edge_m(neighbor_face, neighbor_index);
+
+    DTCL::TraverseState initial_state_with_mirrored_edge;
+    initial_state_with_mirrored_edge.node_ptr = next_node_ptr;
+    initial_state_with_mirrored_edge.current_edge = mirror_edge_m;
+    initial_state_with_mirrored_edge.previous_edge = Edge();
+    traverse_progress.push_back(initial_state_with_mirrored_edge);
+
+    bool is_first_edge = true; /////////////////////
+    int first_edge_reject = 0;
+
+    while (!traverse_progress.empty()) {
+
+        DTCL::TraverseState current_state = traverse_progress.front();
+        traverse_progress.pop_front();
+        
+        // Expand on the last state
+        std::vector<Edge> next_edges = get_next_edges(current_state.current_edge, current_state.previous_edge);
+        std::shared_ptr<DTCL::Node> last_node_ptr = current_state.node_ptr;
+        Edge& current_new_edge = next_edges.at(0);
+                
+        // Examine 2 edges
+        for (int i = 1; i < 3; i++){
+
+            num_node_checked++;
+
+            Edge& next_new_edge = next_edges.at(i);
+
+            // If boundary edge, finish the tree 
+            if (_dt.is_infinite(next_new_edge)){                       
+                std::vector<Point_2> path = backtrack_path(last_node_ptr);
+                complete_paths.push_back(path);
+                
+                break; // Break otherwise the same path will be pushed back twice
+            }
+
+            std::pair<Point_2, Point_2> two_pts = get_points_from_edge(next_new_edge);
+            Point_2 midpoint = CGAL::midpoint(two_pts.first, two_pts.second);
+
+            double midpoint_angle = compute_orientation(last_node_ptr->pose.position, midpoint);
+            double angle_diff = abs(normalize(last_node_ptr->pose.yaw - midpoint_angle));
+
+            // 'Preliminary condtion' to accept the next node 
+            // Loose condition to reduce creating insensible paths
+            // After creating all complete paths that pass this condtion, they are compared for the best one
+            if (angle_diff > M_PI/4){
+                if (is_first_edge){
+                    if (angle_diff > M_PI){
+                        continue;
+                    }
+                }
+                else 
+                    continue;                    
+            }
+            passed++;
+
+            // Create new node, the node is created here and only here
+            std::shared_ptr<DTCL::Node> new_node_ptr = std::make_shared<DTCL::Node>(Pose(midpoint, midpoint_angle));
+            // Register this node
+            // Connect this node to last node
+            new_node_ptr->parent_ptr = last_node_ptr;
+            last_node_ptr->children_ptrs.push_back(new_node_ptr);
+            // Add cone information of this node
+            // new_node_ptr->cones = {two_pts.first, two_pts.second};
+
+            // Otherwise add to new state
+            DTCL::TraverseState new_state(new_node_ptr, next_new_edge, current_new_edge);
+            traverse_progress.push_back(new_state);                
+        }          
+        is_first_edge = false;
+    }
+
+    return complete_paths;
+}
+
+std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand_debug(const Edge& first_edge, const Point_2& starting_pt) {
+
+    std::vector<std::vector<Point_2>> complete_paths;
+
+    // A queue to store the instantaneous traversing progress 
+    // Each has 2 edges represents a state of traverse progress
+    // They represent the previous and current edge respectively
+    std::deque<DTCL::TraverseState> traverse_progress;
+
+    std::shared_ptr<DTCL::Node> starting_pt_ptr = std::make_shared<DTCL::Node>(Pose(starting_pt, 0));
+
+    std::pair<Point_2, Point_2> two_pts_first_node = get_points_from_edge(first_edge);
+    Point_2 next_node_midpt = CGAL::midpoint(two_pts_first_node.first, two_pts_first_node.second);
+
+    double next_node_angle = abs(normalize(compute_orientation(starting_pt_ptr->pose.position, next_node_midpt)));
+    
+    std::shared_ptr<DTCL::Node> next_node_ptr = std::make_shared<DTCL::Node>(Pose(next_node_midpt, next_node_angle));
+
 
     // DEBUGGING
     std::cout << "FIRST NODE: " << std::endl;
@@ -428,24 +571,7 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
             // Loose condition to reduce creating insensible paths
             // After creating all complete paths that pass this condtion, they are compared for the best one
             if (angle_diff > M_PI/4){
-
-                // if (is_first_edge)
-                //     // Looser condition for first edge
-                //     if (angle_diff > M_PI_2 || midpoint_angle > M_PI_2){
-                //         first_edge_reject++;
-                //         std::cout << "REJECTED FIRST EDGE" << std::endl;
-                //         std::cout << "=====================================" << std::endl;
-                //         continue;
-                //     }  
-                //     else{
-                //         std::cout << "FIRST EDGE COMPENSATED" << std::endl;
-                //         std::cout << "=====================================" << std::endl;
-                //     }
-                // else {
-                //     std::cout << "REJECTED" << std::endl;
-                //     std::cout << "=====================================" << std::endl;
-                //     continue;
-                // }       
+      
                 if (is_first_edge){
                     if (angle_diff > M_PI){
                         std::cout << "REJECTED FIRST EDGE" << std::endl;
@@ -478,28 +604,8 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
             traverse_progress.push_back(new_state);                
 
             std::cout << "=====================================" << std::endl; 
-        }    
-        
-        // // Prevent first edge wrong side
-        // if (is_first_edge && first_edge_reject == 2){
-
-        //     DelaunayTriangulation::Face_handle face = current_state.current_edge.first;
-        //     int index = current_state.current_edge.second;
-
-        //     // The opposite edge is the same edge in the neighboring face
-        //     DelaunayTriangulation::Face_handle neighbor_face = face->neighbor(index);
-        //     int neighbor_index = _dt.mirror_index(face, index);
-        //     Edge mirror_edge(neighbor_face, neighbor_index);
-
-        //     DTCL::TraverseState recover_state;  
-        //     recover_state.node_ptr = next_node_ptr;
-        //     recover_state.current_edge = mirror_edge;
-        //     recover_state.previous_edge = Edge();
-
-        //     traverse_progress.push_back(recover_state);
-        // }        
+        }          
         is_first_edge = false;
-
 
         std::cout << "-----------------------------------" << std::endl; 
     }
@@ -507,10 +613,10 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::expand(const Edge& f
     std::cout << "Passed: " << passed << std::endl;
     std::cout << "Total number of nodes checked: " << num_node_checked << std::endl;
     print_all_possible_paths(complete_paths);
-    // std::cout << "exit expand()" << std::endl;
 
     return complete_paths;
 }
+
 
 std::vector<Point_2> DTriangPlannerColorLight::get_ultimate_path(){
     return _ultimate_path;
@@ -525,7 +631,7 @@ std::vector<std::vector<Point_2>> DTriangPlannerColorLight::get_other_paths(){
 }
 
 
-// //////////////////////////////// TESTING FUNCTION ///////////////////////////////////////
+/////////////////////////////////// TESTING FUNCTION ///////////////////////////////////////
 
 void DTriangPlannerColorLight::print_all_possible_paths(std::vector<std::vector<Point_2>> paths) {
     std::cout << "Number of paths: " << paths.size() << std::endl;
@@ -562,7 +668,6 @@ Point_2 DTriangPlannerColorLight::transform_to_car_frame(const Point_2& global_p
     return Point_2(rotated_x, rotated_y);
 }
 
-
 // /////////////////// PRIVATE FUNCTIONS ///////////////////////////////////////
 
 // /*
@@ -585,7 +690,7 @@ std::vector<Edge> DTriangPlannerColorLight::get_next_edges(Edge current_edge, Ed
 
     // The case of first edge
     if (previous_edge.first == DelaunayTriangulation::Face_handle()) {
-        std::cout << "FIRST EDGE" << std::endl;
+        // std::cout << "FIRST EDGE" << std::endl;
 
         DelaunayTriangulation::Face_handle new_face = current_edge.first;
 
@@ -783,271 +888,128 @@ void DTriangPlannerColorLight::print_path(const std::vector<Point_2>& path) {
     std::cout << std::endl;
 }
 
-
-
-
-
-
-
-
-// std::vector<std::vector<Point_2>> DTriangPlannerColorLight::get_paths(){
-//     return _paths;
-// }
-// // std::vector<std::vector<std::pair<Point_2, std::array<Point_2, 2>>>> DTriangPlannerColorLight::get_paths_2(){
-// //     return _paths_2;
-// // }
-
-
-
-
-// DelaunayTriangulation* DTriangPlannerColorLight::get_triangulation_ptr() {
-//     return &_dt;
-// }
-
-
-// std::vector<Point_2> DTriangPlannerColorLight::get_all_vertices() {
-//     std::vector<Point_2> vertices;
-//     for (auto vit = _dt.finite_vertices_begin(); vit != _dt.finite_vertices_end(); ++vit) {
-//         vertices.push_back(vit->point());
-//     }
-//     return vertices;
-// }
-
-
-
-
-//     _best_path = _paths[index_of_longest];
-    
-//     Point_2 car_pt = Point_2(0,0);
-//     _best_path.insert(_best_path.begin(), car_pt); // Add the car point only to the best path
-
-
-//     for (int i = 0; i < _paths.size(); ++i) {
-//         if (i != index_of_longest) {
-//             _other_paths.push_back(_paths[i]);
-//         }
-//     }
-    
-// }
-
-// // void DTriangPlannerColorLight::choose_best_path_2(){
-    
-// //     // For _best_path_2
-// //     int max_size = 0;
-// //     int index_of_longest = -1;
-
-// //     for (int i = 0; i < _paths_2.size(); ++i) {
-// //         if (_paths_2[i].size() > max_size) {
-// //             max_size = _paths_2[i].size();
-// //             index_of_longest = i;
-// //         }
-// //     }
-// //     // Important to have this 
-// //     // If index = -1, C++ exception with description "std::bad_alloc" thrown in the test body
-// //     if (index_of_longest == -1) 
-// //         throw std::runtime_error("_paths is empty");
-
-// //     _best_path_2 = _paths_2[index_of_longest];
-
-
-// //     // For _best_path
-// //     max_size = 0;
-// //     index_of_longest = -1;
-
-// //     for (int i = 0; i < _paths.size(); ++i) {
-// //         if (_paths[i].size() > max_size) {
-// //             max_size = _paths[i].size();
-// //             index_of_longest = i;
-// //         }
-// //     }
-// //     if (index_of_longest == -1)
-// //         throw std::runtime_error("_paths is empty");
-// //     _best_path = _paths[index_of_longest];
-
-    
-// //     std::pair<Point_2, std::array<Point_2, 2>> car_node;
-// //     car_node.first = Point_2(0,0);
-// //     _best_path_2.insert(_best_path_2.begin(), car_node); // Add the car point only to the best path
-
-// //     // For other paths, dont' have to save the 2 cones for each nodes 
-// //     for (int i = 0; i < _paths.size(); ++i) {
-// //         if (i != index_of_longest) {
-// //             _other_paths.push_back(_paths[i]);
-// //         }
-// //     }
-    
-// // }
-
-
-// // Point_2 DTriangPlannerColorLight::get_midpoint_of_edge(const Edge& edge) {
-// //     Point_2 p1 = edge.first->vertex((edge.second + 1) % 3)->point();
-// //     Point_2 p2 = edge.first->vertex((edge.second + 2) % 3)->point();
-// //     return CGAL::midpoint(p1, p2);
-// // }
-
-
-
-
-
-
-
-// // std::vector<std::pair<Point_2, std::array<Point_2, 2>>> DTriangPlannerColorLight::backtrack_path_2(const std::shared_ptr<DTCL::Node>& leaf_node) {
-// //     std::vector<std::pair<Point_2, std::array<Point_2, 2>>> path;
-    
-// //     std::shared_ptr<DTCL::Node> current_node = leaf_node;
-
-// //     while (current_node) {
-
-// //         Point_2 point = current_node->pose.position;
-// //         std::array<Point_2, 2> cones = current_node->cones;
-// //         std::pair<Point_2, std::array<Point_2, 2>> node = std::make_pair(point, cones);
-// //         path.push_back(node);
-
-// //         current_node = current_node->parent_ptr;
-// //     }
-
-// //     // Reverse the path to get it from root to leaf
-// //     std::reverse(path.begin(), path.end());
-// //     return path;
-// // }
-
-
-
-
-
-
-// std::vector<Point_2> DTriangPlannerColorLight::catmull_rom_spline(const std::vector<Point_2>& waypoints, double t) {
-//     std::vector<Point_2> smooth_path;
-
-//     if (waypoints.size() < 4) {
-//         return waypoints;
-//     }
-
-//     smooth_path.push_back(waypoints.front());
-
-//     for (size_t i = 1; i < waypoints.size() - 2; ++i) {
-//         for (double t_iter = 0; t_iter < 1; t_iter += t) {
-//             double t2 = t_iter * t_iter;
-//             double t3 = t2 * t_iter;
-
-//             // Catmull-Rom spline equation coefficients
-//             double p0 = (-t3 + 2*t2 - t_iter) / 2;
-//             double p1 = (3*t3 - 5*t2 + 2) / 2;
-//             double p2 = (-3*t3 + 4*t2 + t_iter) / 2;
-//             double p3 = (t3 - t2) / 2;
-
-//             // Calculating point coordinates
-//             double x = CGAL::to_double(waypoints[i - 1].x()) * p0 + CGAL::to_double(waypoints[i].x()) * p1 + CGAL::to_double(waypoints[i + 1].x()) * p2 + CGAL::to_double(waypoints[i + 2].x()) * p3;
-//             double y = CGAL::to_double(waypoints[i - 1].y()) * p0 + CGAL::to_double(waypoints[i].y()) * p1 + CGAL::to_double(waypoints[i + 1].y()) * p2 + CGAL::to_double(waypoints[i + 2].y()) * p3;
-
-//             // Constructing a new point
-//             Point_2 point(x, y);
-
-//             smooth_path.push_back(point);
-//         }
-//     }
-
-//     smooth_path.push_back(waypoints.back());
-
-//     return smooth_path;
-// }
-
-// std::vector<Point_2> DTriangPlannerColorLight::bezier_curve(const std::vector<Point_2>& control_points, int num_points) {
-//     std::vector<Point_2> bezier_curve;
-//     int n = control_points.size() - 1; // degree of the curve
-
-//     for (int i = 0; i <= num_points; ++i) {
-//         double t = static_cast<double>(i) / num_points;
-//         std::vector<Point_2> temp = control_points;
-
-//         // De Casteljau's Algorithm
-//         for (int k = 1; k <= n; ++k) {
-//             for (int j = 0; j <= n - k; ++j) {
-//                 double x = (1 - t) * CGAL::to_double(temp[j].x()) + t * CGAL::to_double(temp[j + 1].x());
-//                 double y = (1 - t) * CGAL::to_double(temp[j].y()) + t * CGAL::to_double(temp[j + 1].y());
-//                 temp[j] = Point_2(x, y);
-//             }
-//         }
-
-//         bezier_curve.push_back(temp[0]);
-//     }
-
-//     return bezier_curve;
-// }
-
-// std::vector<Point_2> DTriangPlannerColorLight::calculate_control_points(const std::vector<Point_2>& path, double curvature_parameter) {
-//     std::vector<Point_2> control_points;
-
-//     control_points.push_back(path.front());
-//     for (size_t i = 0; i < path.size() - 1; ++i) {
-//         // Get two consecutive points
-//         Point_2 p1 = path[i];
-//         Point_2 p2 = path[i + 1];
-
-//         // Calculate mid-point
-//         double mid_x = (CGAL::to_double(p1.x()) + CGAL::to_double(p2.x())) / 2;
-//         double mid_y = (CGAL::to_double(p1.y()) + CGAL::to_double(p2.y())) / 2;
-
-//         // Calculate a perpendicular vector
-//         double dx = CGAL::to_double(p2.x()) - CGAL::to_double(p1.x());
-//         double dy = CGAL::to_double(p2.y()) - CGAL::to_double(p1.y());
-//         double length = sqrt(dx * dx + dy * dy);
-//         double perp_dx = -dy / length;
-//         double perp_dy = dx / length;
-
-//         // Calculate control points using the curvature parameter
-//         Point_2 control_point1(mid_x + perp_dx * curvature_parameter, mid_y + perp_dy * curvature_parameter);
-//         Point_2 control_point2(mid_x - perp_dx * curvature_parameter, mid_y - perp_dy * curvature_parameter);
-
-//         control_points.push_back(control_point1);
-//         control_points.push_back(control_point2);
-//     }
-//     control_points.push_back(path.back());
-
-
-//     return control_points;
-// }
-
-// std::vector<Point_2> DTriangPlannerColorLight::smooth_path(const std::vector<Point_2>& path) {
-//     const double curvature_parameter = 2;
-//     std::vector<Point_2> control_points = calculate_control_points(path, curvature_parameter);
-//     int num_curve_points = path.size() - 1;
-//     return bezier_curve(control_points, num_curve_points);
-// }
-
-
-
-
-
-
-
-
-// //////
-
-// void DTriangPlannerColorLight::print_face_vertices(DelaunayTriangulation::Face_handle face) {
-//     if (!face->is_valid()) {
-//         std::cerr << "Invalid face handle." << std::endl;
-//         return;
-//     }
-
-//     for (int i = 0; i < 3; ++i) {
-//         Point_2 vertex = face->vertex(i)->point();
-//         std::cout << "Vertex " << i << ": (" << vertex.x() << ", " << vertex.y() << ")" << std::endl;
-//     }
-// }
-
-
-
-
-
-// void DTriangPlannerColorLight::print_path_2(const std::vector<std::pair<Point_2, std::array<Point_2, 2>>>& path) {
-//     std::cout << "Print anything?" << std::endl;
-//     for (const auto& waypoint : path) {
-//         const Point_2& position = waypoint.first;
-//         const std::array<Point_2, 2>& cones = waypoint.second;
-
-//         std::cout << "Waypoint: (" << CGAL::to_double(position.x()) << ", " << CGAL::to_double(position.y()) << ")\n";
-//         std::cout << "  Cone 1: (" << CGAL::to_double(cones[0].x()) << ", " << CGAL::to_double(cones[0].y()) << ")\n";
-//         std::cout << "  Cone 2: (" << CGAL::to_double(cones[1].x()) << ", " << CGAL::to_double(cones[1].y()) << ")\n";
-//     }
-// }
+double DTriangPlannerColorLight::cross_product(const Point_2 &a, const Point_2 &b)
+{
+    return CGAL::to_double(a.x() * b.y() - a.y() * b.x());
+}
+
+void DTriangPlannerColorLight::offset_segment(const Point_2 &p1, const Point_2 &p2, double offset_distance, bool is_offset_left, Point_2 &new_p1, Point_2 &new_p2)
+{
+    // Direction vector
+    Kernel::Vector_2 dir = p2 - p1;
+    // Normal vector (perpendicular)
+    Kernel::Vector_2 normal = Kernel::Vector_2(-dir.y(), dir.x());
+
+    // Depending on the direction, use the normal vector to offset the points
+    double length = std::sqrt(CGAL::to_double(normal.squared_length()));
+    normal = normal / length * offset_distance;
+
+    if (!is_offset_left)
+    {
+        normal = -normal;
+    }
+
+    new_p1 = p1 + normal;
+    new_p2 = p2 + normal;
+}
+
+Point_2 DTriangPlannerColorLight::find_point_at_distance(const Point_2& p1, const Point_2& p2, double distance, bool condition)
+{
+    // Calculate the squared length between p1 and p2
+    double squared_length_p1_p2 = CGAL::to_double(CGAL::squared_distance(p1, p2));
+
+    Point_2 p3;
+    if (condition) {
+        // P3 is at a distance from P2, in the direction of P1 to P2
+        double factor = distance / std::sqrt(squared_length_p1_p2);
+        p3 = Point_2(p2.x() - factor * (p2.x() - p1.x()), p2.y() - factor * (p2.y() - p1.y()));
+    } else {
+        // P3 is at a distance from P2, in the opposite direction of P1 to P2
+        double factor = distance / std::sqrt(squared_length_p1_p2);
+        p3 = Point_2(p2.x() + factor * (p2.x() - p1.x()), p2.y() + factor * (p2.y() - p1.y()));
+    }
+    return p3;
+}
+
+int DTriangPlannerColorLight::find_intersection(const Point_2 &p1, const Point_2 &p2, const Point_2 &p3, const Point_2 &p4)
+{
+    // Convert CGAL points to the exact kernel for computations
+    Point_2 kp1(p1.x(), p1.y());
+    Point_2 kp2(p2.x(), p2.y());
+    Point_2 kp3(p3.x(), p3.y());
+    Point_2 kp4(p4.x(), p4.y());
+
+    Kernel::FT denominator = (kp1.x() - kp2.x()) * (kp3.y() - kp4.y()) - (kp1.y() - kp2.y()) * (kp3.x() - kp4.x());
+
+    // Check if lines are parallel (denominator is zero)
+    if (denominator == 0)
+    {
+        return 0; // No intersection (parallel lines)
+    }
+
+    Kernel::FT t = ((kp1.x() - kp3.x()) * (kp3.y() - kp4.y()) - (kp1.y() - kp3.y()) * (kp3.x() - kp4.x())) / denominator;
+    Kernel::FT u = ((kp2.x() - kp1.x()) * (kp1.y() - kp3.y()) - (kp2.y() - kp1.y()) * (kp1.x() - kp3.x())) / denominator;
+
+    // Check if the intersection point lies on both line segments
+    if (t >= 0 && t <= 1)
+    {
+        return 1; // Intersection in the middle of first segment p1 and p2
+    }
+    else if (u >= 0 && u <= 1)
+    {
+        return 2; // Intersection in the middle of second segment p3 and p4
+    }
+
+    return 0; // No intersection
+}
+
+std::vector<Point_2> DTriangPlannerColorLight::offset_polyline(const std::vector<Point_2> &points, double offset_distance, bool is_initial_direction_left)
+{
+    std::vector<Point_2> offset_points;
+
+    if (points.size() < 2)
+    {
+        return offset_points;
+    }
+
+    // Offset the first segment
+    Point_2 new_p1, new_p2;
+    for (int i = 0; i < points.size() - 1; i++)
+    {  
+        offset_segment(points[i], points[i + 1], offset_distance, is_initial_direction_left, new_p1, new_p2);
+
+        if (i == 0)
+        {
+            offset_points.push_back(new_p1);
+        }
+
+        // Check condition for points 2:
+        int condition = 0;
+        if (i + 2 < points.size()) // Check bounds
+        {
+            condition = find_intersection(points[i + 1], points[i + 2], new_p1, new_p2);
+        }        
+
+        // if condition == 0, no intersection
+        if (condition == 0)
+        {
+            offset_points.push_back(new_p2);
+        }
+        // if it intersection in the middle of first segment p1 and p2
+        else if (condition == 1)
+        {
+            Point_2 p3;
+            p3 = find_point_at_distance(new_p1, new_p2, offset_distance, true);
+            offset_points.push_back(p3);
+        }
+        // if it intersection in the middle of second segment p3 and p4
+        else if (condition == 2)
+        {
+            Point_2 p3;
+            p3 = find_point_at_distance(new_p1, new_p2, offset_distance, false);
+            offset_points.push_back(p3);
+        }
+    }
+
+    return offset_points;
+}

@@ -25,8 +25,6 @@ DTriangPlannerColorLightROSWrapper::DTriangPlannerColorLightROSWrapper(ros::Node
 
 void DTriangPlannerColorLightROSWrapper::cone_array_callback(const eufs_msgs::ConeArrayWithCovariance::ConstPtr& msg){
     
-    ROS_INFO("Received a cone ground truth message");
-
     std::vector<Point_2> all_visible_cones;
 
     std::vector<eufs_msgs::ConeWithCovariance> yellow_cones = msg->yellow_cones;
@@ -43,36 +41,28 @@ void DTriangPlannerColorLightROSWrapper::cone_array_callback(const eufs_msgs::Co
         DTCL::Cone cone_type(point,0);
         cones_in.push_back(cone_type);
     }
-
     _incoming_cones = cones_in;
 }
 
 
 void DTriangPlannerColorLightROSWrapper::execution_loop(){
     while (ros::ok()){
-
         _dt.clear();
-        // std::cout << "Loop" << std::endl;
+
         visualization_msgs::MarkerArray marker_array;
 
-
         ros::spinOnce();
-        // std::cout << "spinOnce" << std::endl;
 
         if (_incoming_cones.empty()){
-            // std::cout << "Sleeping" << std::endl;
             path_planning_rate.sleep();
-            // std::cout << "Next" << std::endl;
             continue;
         }
 
-        // std::cout << "Planning" << std::endl;
         set_cones(_incoming_cones);
-        // std::cout << "Planned" << std::endl;
 
         // Check the number of edges that are going to be plot, if forget to _paths.clear() will create increasing number of markers
         std::vector<std::pair<Point_2, Point_2>> plotting_edges = get_edges_for_plotting();  
-        std::cout << "Number of edges for plotting: " << plotting_edges.size() << std::endl;
+        // std::cout << "Number of edges for plotting: " << plotting_edges.size() << std::endl;
 
         visualization_msgs::MarkerArray edges_marker_array = create_triangulation_edge_marker_array(plotting_edges);
         marker_array.markers.insert(marker_array.markers.end(), edges_marker_array.markers.begin(), edges_marker_array.markers.end());
