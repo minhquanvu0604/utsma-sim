@@ -47,7 +47,7 @@ public:
     */
     std::vector<Point_2> process_group_1(const std::vector<DTCL::Cone>& group_1, int nearest_color);
     
-    std::vector<Point_2> process_group_2(const std::vector<DTCL::Cone>& group_2, const Point_2& starting_pt);
+    std::vector<Point_2> process_group_2(const Point_2& starting_pt);
 
 
     // std::shared_ptr<DT::Node> get_last_node_path_group_1(const std::vector<Point_2>& path_group_1);
@@ -116,6 +116,9 @@ protected:
     // Only for computing triangulation, not used for group 1 or path reusing
     // Set as member variable for easy retrieveing inside test
     std::vector<Point_2> _local_pts_for_triang; // REALLY NEEDED? PROB NOT
+
+    std::vector<DTCL::Cone> _group_2;
+
 
     /**
     For visualisation

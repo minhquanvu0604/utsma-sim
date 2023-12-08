@@ -1,3 +1,5 @@
+### FIXED BY MODIFY get_first_edge TO RETURN AN EDGE WITH 2 CONES OF DIFFERENT COLOR
+
 #Cones both groups::::::::::::::::::::::::::: 
 # Cone - X: 2.83401, Y: -0.175982, Color: 1
 # Cone - X: 4.89114, Y: 0.0122075, Color: 1

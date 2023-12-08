@@ -83,14 +83,14 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
     // // // GROUP 2 // // // 
     // The rest elements from sorted_cones
     // std::cout << "group_1.size(): " << group_1.size() << std::endl;
-    std::vector<DTCL::Cone> group_2(sorted_cones.begin() + group_1.size(), sorted_cones.end());
-    if (group_2.size() < 4)
-        group_2.clear();
+    _group_2 = std::vector<DTCL::Cone>(sorted_cones.begin() + group_1.size(), sorted_cones.end());
+    if (_group_2.size() < 4)
+        _group_2.clear();
 
     std::cout << "Cones group 2::::::::::::::::::::::::::: " << std::endl;
-    print_cones(group_2);
+    print_cones(_group_2);
 
-    std::vector<Point_2> path_group_2 = process_group_2(group_2, path_group_1.back());
+    std::vector<Point_2> path_group_2 = process_group_2(path_group_1.back());
     if (path_group_2.empty() && path_group_1.size() == 1){
         std::cout << "\033[33m[WARNING] path_group_2 is empty\033[0m" << std::endl;
         print_cones(sorted_cones);
@@ -213,14 +213,14 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1(const std::vector
 
 
 
-std::vector<Point_2> DTriangPlannerColorLight::process_group_2(const std::vector<DTCL::Cone>& group_2, const Point_2& starting_pt){
+std::vector<Point_2> DTriangPlannerColorLight::process_group_2(const Point_2& starting_pt){
     
-    if (group_2.size() < 2){
+    if (_group_2.size() < 2){
         std::vector<Point_2> empty;
         return empty;
     }
 
-    triangulate(group_2);
+    triangulate(_group_2);
     Edge first_edge = get_first_edge(starting_pt);
 
     std::vector<std::vector<Point_2>> complete_paths = expand(first_edge, starting_pt);
@@ -263,9 +263,28 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
 
     DelaunayTriangulation::Vertex_handle nearest, second_nearest;
     double nearest_distance = std::numeric_limits<double>::max(), second_nearest_distance = std::numeric_limits<double>::max();
+    
+
+    // for (auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
+        
+    //     // Boundaries for the points
+    //     if (abs(CGAL::to_double(v->point().y())) > 10)
+    //         continue;
+        
+    //     double distance = CGAL::to_double(CGAL::squared_distance(v->point(), starting_pt));
+
+    //     if (distance < nearest_distance) {
+    //         second_nearest = nearest;
+    //         second_nearest_distance = nearest_distance;
+    //         nearest = v;
+    //         nearest_distance = distance;
+    //     } else if (distance < second_nearest_distance) {
+    //         second_nearest = v;
+    //         second_nearest_distance = distance;
+    //     }
+    // }
 
     for (auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
-        
         // Boundaries for the points
         if (abs(CGAL::to_double(v->point().y())) > 10)
             continue;
@@ -273,13 +292,47 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
         double distance = CGAL::to_double(CGAL::squared_distance(v->point(), starting_pt));
 
         if (distance < nearest_distance) {
-            second_nearest = nearest;
-            second_nearest_distance = nearest_distance;
             nearest = v;
             nearest_distance = distance;
-        } else if (distance < second_nearest_distance) {
-            second_nearest = v;
-            second_nearest_distance = distance;
+        }
+    }
+    Point_2 nearest_pt = nearest->point();
+    int nearest_color = -1;
+
+    for (const auto& cone : _group_2){
+        if (is_approx_equal(nearest_pt, cone.point, 1e-3)){
+            nearest_color = cone.color;
+            break;
+        }
+    }
+    if (nearest_color == -1)
+        throw std::runtime_error("Can't find nearest cone color");
+
+
+    // Find the second nearest vertex with a different color
+    for (auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
+        
+        // Skip the nearest one
+        if (is_approx_equal(v->point(), nearest_pt, 1e-3))
+            continue;
+
+        // Find color
+        Point_2 current_cone_pt = v->point();
+        int current_cone_color = -1;
+        for (const auto& cone : _group_2){
+            if (is_approx_equal(current_cone_pt, cone.point, 1e-3)){
+                current_cone_color = cone.color;
+            }
+        }
+        if (current_cone_color == -1)
+            throw std::runtime_error("Can't find current cone color");
+        
+        if (current_cone_color != nearest_color) {
+            double distance = CGAL::to_double(CGAL::squared_distance(v->point(), starting_pt));
+            if (distance < second_nearest_distance) {
+                second_nearest = v;
+                second_nearest_distance = distance;
+            }
         }
     }
 
@@ -309,6 +362,7 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
     // print_edge_vertices(nearest_edge);
 
     return nearest_edge;
+    
 }
 
 /*
