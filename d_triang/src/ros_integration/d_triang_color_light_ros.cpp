@@ -51,6 +51,7 @@ void DTriangPlannerColorLightROSWrapper::cone_array_callback(const eufs_msgs::Co
 void DTriangPlannerColorLightROSWrapper::execution_loop(){
     while (ros::ok()){
 
+        _dt.clear();
         // std::cout << "Loop" << std::endl;
         visualization_msgs::MarkerArray marker_array;
 

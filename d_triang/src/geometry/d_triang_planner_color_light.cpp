@@ -73,30 +73,40 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
     // path_group_1 contains at least the car point
     std::vector<Point_2> path_group_1 = process_group_1(group_1, nearest_color);
     
-
     std::cout << "Path from group 1: " << path_group_1.size() << " element(s)" << std::endl;
     print_path(path_group_1);
-
     // // // // // //
-
 
     // // // GROUP 2 // // // 
     // The rest elements from sorted_cones
     // std::cout << "group_1.size(): " << group_1.size() << std::endl;
     _group_2 = std::vector<DTCL::Cone>(sorted_cones.begin() + group_1.size(), sorted_cones.end());
-    if (_group_2.size() < 4)
-        _group_2.clear();
 
     std::cout << "Cones group 2::::::::::::::::::::::::::: " << std::endl;
     print_cones(_group_2);
 
-    std::vector<Point_2> path_group_2 = process_group_2(path_group_1.back());
-    if (path_group_2.empty() && path_group_1.size() == 1){
-        std::cout << "\033[33m[WARNING] path_group_2 is empty\033[0m" << std::endl;
-        print_cones(sorted_cones);
-        throw std::runtime_error("!");
+
+    // Check if group 2 have mixed cones
+    int total_color = 0;
+    for (const auto& cone : _group_2){
+        total_color += cone.color;
     }
 
+    // The group 2 is full of cones of the same color, ignore
+    std::vector<Point_2> path_group_2;
+    if (!(total_color == 0 || total_color == _group_2.size())){ 
+        if (_group_2.size() < 4)
+            _group_2.clear();
+
+        path_group_2 = process_group_2(path_group_1.back());
+        if (path_group_2.empty() && path_group_1.size() == 1){
+            std::cout << "\033[33m[WARNING] path_group_2 is empty\033[0m" << std::endl;
+            print_cones(sorted_cones);
+            throw std::runtime_error("!");
+        }        
+    }
+
+    // Combine 
     _ultimate_path = path_group_1;
     _ultimate_path.insert(_ultimate_path.end(), path_group_2.begin(), path_group_2.end());
 
@@ -173,78 +183,34 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1(const std::vector
 }
 
 
-// std::vector<Point_2> DTriangPlannerColorLight::offset_line(const std::vector<Point_2>& line, bool offset_to_left) {
-    
-//     std::vector<Point_2> offset_line;
-//     double dx = 0.0, dy = 0.0;
-//     double offset_distance = TRACK_WIDTH / 2;
-
-//     for (size_t i = 0; i < line.size() - 1; ++i) {
-//         // Calculate direction of the line segment
-//         dx = CGAL::to_double(line[i + 1].x()) - CGAL::to_double(line[i].x());
-//         dy = CGAL::to_double(line[i + 1].y()) - CGAL::to_double(line[i].y());
-
-
-//         // Calculate normal vector
-//         double length = sqrt(dx * dx + dy * dy);
-//         double perp_dx = -dy / length;
-//         double perp_dy = dx / length;
-
-//         // Apply offset
-//         if (offset_to_left) {
-//             perp_dx = -perp_dx;
-//             perp_dy = -perp_dy;
-//         }
-
-//         // Offset each point
-//         double new_x = CGAL::to_double(line[i].x()) + perp_dx * offset_distance;
-//         double new_y = CGAL::to_double(line[i].y()) + perp_dy * offset_distance;
-//         offset_line.push_back(Point_2(new_x, new_y));
-//     }
-
-//     // Offset the last point
-//     double length = sqrt(dx * dx + dy * dy);
-//     double new_x = CGAL::to_double(line.back().x()) + (offset_to_left ? dy : -dy) / length * offset_distance;
-//     double new_y = CGAL::to_double(line.back().y()) + (offset_to_left ? -dx : dx) / length * offset_distance;
-//     offset_line.push_back(Point_2(new_x, new_y));
-
-//     return offset_line;
-// }
-
-
-
 std::vector<Point_2> DTriangPlannerColorLight::process_group_2(const Point_2& starting_pt){
-    
-    if (_group_2.size() < 2){
-        std::vector<Point_2> empty;
+    std::vector<Point_2> empty;
+
+    if (_group_2.size() < 2)
         return empty;
-    }
+
+    std::cout << "1" << std::endl;
 
     triangulate(_group_2);
     Edge first_edge = get_first_edge(starting_pt);
+    
+    if (first_edge == Edge())
+        return empty;
+
+    std::cout << "2" << std::endl;
 
     std::vector<std::vector<Point_2>> complete_paths = expand(first_edge, starting_pt);
 
+    std::cout << "3" << std::endl;
+
     choose_best_path(complete_paths);
+
+    std::cout << "4" << std::endl;
 
     return _best_path_group_2;
 }
 
-
-
-// // std::shared_ptr<DTCL::Node> get_last_node_path_group_1(const std::vector<Point_2>& path_group_1){
-// //     for (auto& waypoint : path_group_1){
-
-
-// //         std::shared_ptr<DTCL::Node> node_group_1 = std::make_shared<DTCL::Node>(waypoint,);
-// //     }
-// // }
-
-
-
 void DTriangPlannerColorLight::triangulate(const std::vector<DTCL::Cone>& group_2){
-
-    _dt.clear();
 
     std::vector<Point_2> input_vect;
     // DTCL
@@ -264,26 +230,6 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
     DelaunayTriangulation::Vertex_handle nearest, second_nearest;
     double nearest_distance = std::numeric_limits<double>::max(), second_nearest_distance = std::numeric_limits<double>::max();
     
-
-    // for (auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
-        
-    //     // Boundaries for the points
-    //     if (abs(CGAL::to_double(v->point().y())) > 10)
-    //         continue;
-        
-    //     double distance = CGAL::to_double(CGAL::squared_distance(v->point(), starting_pt));
-
-    //     if (distance < nearest_distance) {
-    //         second_nearest = nearest;
-    //         second_nearest_distance = nearest_distance;
-    //         nearest = v;
-    //         nearest_distance = distance;
-    //     } else if (distance < second_nearest_distance) {
-    //         second_nearest = v;
-    //         second_nearest_distance = distance;
-    //     }
-    // }
-
     for (auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
         // Boundaries for the points
         if (abs(CGAL::to_double(v->point().y())) > 10)
@@ -336,24 +282,29 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
         }
     }
 
+    
+    if (second_nearest == DelaunayTriangulation::Vertex_handle())
+        std::cout << "fuq" << std::endl;
+
+
     // From 2 nearest vertices, find the corresponding edge
     Edge nearest_edge;
-    bool edge_found = false;
+    // bool edge_found = false;
 
     Edge_circulator c = _dt.incident_edges(nearest), done(c);
     if (c != 0) {
         do {
             if ((c->first->vertex((c->second + 1) % 3) == second_nearest) || (c->first->vertex((c->second + 2) % 3) == second_nearest)) {
                 nearest_edge = *c;
-                edge_found = true;
+                // edge_found = true;
                 break;
             }
         } while (++c != done);
     }
 
-    // Logic error checking
-    if (!edge_found) 
-        throw std::runtime_error("Vertices are not connected by an edge");
+    // // Logic error checking
+    // if (nearest_edge == Edge()) 
+    //     throw std::runtime_error("Vertices are not connected by an edge");
 
     if (_dt.is_infinite(nearest_edge))
         throw std::runtime_error("The nearest edge is infinite");
@@ -362,7 +313,6 @@ Edge DTriangPlannerColorLight::get_first_edge(const Point_2& starting_pt){
     // print_edge_vertices(nearest_edge);
 
     return nearest_edge;
-    
 }
 
 /*
