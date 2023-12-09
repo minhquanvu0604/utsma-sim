@@ -52,13 +52,13 @@ public:
     Doesn't choose next suitable point from car 
     */
     std::vector<Point_2> process_group_1_mtc(const std::vector<DTCL::Cone>& group_1, int nearest_color);
-
-
     
     std::vector<Point_2> process_group_2(const Point_2& starting_pt);
 
     // std::shared_ptr<DT::Node> get_last_node_path_group_1(const std::vector<Point_2>& path_group_1);
     // std::vector<Point_2> offset_line(const std::vector<Point_2>& line, bool offset_to_left);
+
+    Point_2 find_lookahead_point();
 
     /**
     Perform triangulation
@@ -94,6 +94,8 @@ public:
     std::vector<Edge> get_next_edges(Edge current_edge, Edge previous_edge);   
 
 
+
+
     // Testing function 
     DelaunayTriangulation* get_triangulation_ptr();
     Point_2 transform_to_car_frame(const Point_2& global_pt, double car_x, double car_y, double car_yaw);
@@ -117,7 +119,7 @@ public:
     std::vector<std::vector<Point_2>> get_other_paths();
 
 
-    /// CMT
+    /// Offsetting paths utilities for group 1
     double cross_product(const Point_2 &a, const Point_2 &b);
     void offset_segment(const Point_2 &p1, const Point_2 &p2, double offset_distance, bool direction, Point_2 &new_p1, Point_2 &new_p2);
     Point_2 find_point_at_distance(const Point_2& p1, const Point_2& p2, double distance, bool condition);
@@ -129,6 +131,7 @@ public:
     void print_edge_vertices(const Edge& edge);
     void print_path(const std::vector<Point_2>& path);
     void print_cones(const std::vector<DTCL::Cone>& cones);
+
 
 protected:
     DelaunayTriangulation _dt;
@@ -175,6 +178,7 @@ private:
 protected: 
     const double PATH_PLANNING_RATE = 30;
     double TRACK_WIDTH = 3.0;
+    double LOOKAHEAD_DISTANCE = 5.0;
     
     // All the possible paths found, each vector of Point_2 represents a path
     std::vector<std::vector<Point_2>> _paths_group_2;

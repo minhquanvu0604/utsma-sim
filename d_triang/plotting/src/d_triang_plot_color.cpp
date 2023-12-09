@@ -23,7 +23,7 @@ DTriangPlotColor::DTriangPlotColor() : _config_num{1} {}
 void DTriangPlotColor::plot(){
     
     read_cone_config_color();        
-    set_cones(_cones_local);
+    set_cones_debug(_cones_local);
     update_order();
 
 

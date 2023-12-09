@@ -23,7 +23,8 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
             // Filter out cones form irrelevant paths segment on the far 2 sides
             if (abs(CGAL::to_double(sorted_cones.at(i).point.y())) > TRACK_WIDTH*2 && /////////////// NEEDS TO TUNE THIS !!
                 abs(CGAL::to_double(sorted_cones.at(i).point.x())) < TRACK_WIDTH*2)
-                std::cout << "\033[33m[WARNING] Outlying cones detected\033[0m" << std::endl;
+                // std::cout << "\033[33m[WARNING] Outlying cones detected\033[0m" << std::endl;
+                ;
             else 
                 group_1.push_back(sorted_cones.at(i));
         }
@@ -206,11 +207,12 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::ve
     
     std::vector<Point_2> path_group_1;
     Point_2 car_pt(0,0);
-    path_group_1.push_back(car_pt); // Include the car position
-    
-    if (group_1.empty())
-        return path_group_1;    
 
+    if (group_1.empty()){
+        path_group_1.push_back(car_pt); // Include the car position
+        return path_group_1;        
+    }
+    
     std::vector<Point_2> cone_as_pt;
     for (auto cone : group_1){
         cone_as_pt.push_back(cone.point);
@@ -224,6 +226,22 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::ve
         is_offset_left = false;
 
     path_group_1 = offset_polyline(cone_as_pt, TRACK_WIDTH/2, is_offset_left);
+    
+    // std::cout<< "Print offset: " << std::endl;
+    // for (const auto& p : path_group_1){
+    //     std::cout << p << std::endl;
+    // }
+
+    // Connect the car to the offset line
+    // Eliminate some first path segments that go in the opposite direction of the whole path 
+    double leaf_y = CGAL::to_double(path_group_1.back().y());
+    path_group_1.erase(
+        std::remove_if(path_group_1.begin(), path_group_1.end(), [leaf_y](const Point_2& point) {
+            return CGAL::to_double(point.y()) * leaf_y < 0;
+        }),
+        path_group_1.end()
+    );
+
     path_group_1.insert(path_group_1.begin(), car_pt); 
 
     return path_group_1;
@@ -762,6 +780,37 @@ std::vector<Edge> DTriangPlannerColorLight::get_next_edges(Edge current_edge, Ed
 
     return next_edges;
 }
+
+Point_2 DTriangPlannerColorLight::find_lookahead_point() {
+    if (_ultimate_path.empty()) {
+        throw std::runtime_error("Path is empty");
+    }
+
+    double accumulated_distance = 0.0;
+    Point_2 previous_point(0,0);
+
+    for (const auto& point : _ultimate_path) {
+        double segment_length = std::sqrt(CGAL::to_double(CGAL::squared_distance(previous_point, point)));
+
+        // Check if we have reached or passed the lookahead distance
+        if (accumulated_distance + segment_length >= LOOKAHEAD_DISTANCE) {
+            double ratio = (LOOKAHEAD_DISTANCE - accumulated_distance) / segment_length;
+            double lookahead_x = CGAL::to_double(previous_point.x()) + ratio * (CGAL::to_double(point.x()) - CGAL::to_double(previous_point.x()));
+            double lookahead_y = CGAL::to_double(previous_point.y()) + ratio * (CGAL::to_double(point.y()) - CGAL::to_double(previous_point.y()));
+            return Point_2(lookahead_x, lookahead_y);
+        }
+
+        accumulated_distance += segment_length;
+        previous_point = point;
+    }
+
+    // If we reach this point, the lookahead distance extends beyond the path,
+    // so return the last point on the path.
+    return _ultimate_path.back();
+}
+
+
+///////////// UTILITY FUNCITON //////////////////////////////
 
 bool DTriangPlannerColorLight::are_edges_equal(const Edge& e1, const Edge& e2) {
     double tolerance = 1e-3;

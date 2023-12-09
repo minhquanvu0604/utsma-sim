@@ -26,6 +26,7 @@ public:
 private:
     visualization_msgs::MarkerArray create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges);
     visualization_msgs::Marker create_path_marker(const std::vector<Point_2>& path, double red, double green, double blue, double alpha);
+    visualization_msgs::Marker create_lookahead_point_marker(Point_2 lookahead_pt);
 
 
 private:
@@ -36,7 +37,9 @@ private:
     ros::Publisher _pub_command_vel;
     ros::Publisher _pub_marker;
 
-    ros::Rate path_planning_rate;
+    ros::Rate _path_planning_rate;
+
+    bool _visualise;
 
     // Data
     std::vector<DTCL::Cone> _incoming_cones;

@@ -2,7 +2,7 @@
 
 
 DTriangPlannerColorLightROSWrapper::DTriangPlannerColorLightROSWrapper(ros::NodeHandle nh)
-    : path_planning_rate(PATH_PLANNING_RATE)
+    : _path_planning_rate(PATH_PLANNING_RATE), _visualise{true}
 {
     
     ROS_INFO("DTriangPlannerColorLightROSWrapper Constructor");
@@ -54,26 +54,44 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
         ros::spinOnce();
 
         if (_incoming_cones.empty()){
-            path_planning_rate.sleep();
+            _path_planning_rate.sleep();
             continue;
         }
 
         set_cones(_incoming_cones);
+        // set_cones_debug(_incoming_cones);
 
         // Check the number of edges that are going to be plot, if forget to _paths.clear() will create increasing number of markers
         std::vector<std::pair<Point_2, Point_2>> plotting_edges = get_edges_for_plotting();  
         // std::cout << "Number of edges for plotting: " << plotting_edges.size() << std::endl;
 
-        visualization_msgs::MarkerArray edges_marker_array = create_triangulation_edge_marker_array(plotting_edges);
-        marker_array.markers.insert(marker_array.markers.end(), edges_marker_array.markers.begin(), edges_marker_array.markers.end());
 
         std::vector<Point_2> best_path = get_ultimate_path(); 
-        visualization_msgs::Marker best_path_marker = create_path_marker(best_path, 0.0, 1.0, 0.0, 1);
-        marker_array.markers.push_back(best_path_marker);
 
-        _pub_marker.publish(marker_array);
+        Point_2 lookahead_pt = find_lookahead_point();
 
-        path_planning_rate.sleep();
+
+
+
+
+
+
+        if (_visualise){
+
+            visualization_msgs::MarkerArray edges_marker_array = create_triangulation_edge_marker_array(plotting_edges);
+            marker_array.markers.insert(marker_array.markers.end(), edges_marker_array.markers.begin(), edges_marker_array.markers.end());        
+
+            visualization_msgs::Marker best_path_marker = create_path_marker(best_path, 0.0, 1.0, 0.0, 1);
+            marker_array.markers.push_back(best_path_marker);        
+
+            visualization_msgs::Marker lookahead_pt_marker = create_lookahead_point_marker(lookahead_pt);
+            marker_array.markers.push_back(lookahead_pt_marker);
+
+            _pub_marker.publish(marker_array);            
+        }
+
+
+        _path_planning_rate.sleep();
     }
 }
 
@@ -148,6 +166,37 @@ visualization_msgs::Marker DTriangPlannerColorLightROSWrapper::create_path_marke
         // Add the point to the marker points
         marker.points.push_back(marker_point);
     }
+
+    return marker;
+}
+
+visualization_msgs::Marker DTriangPlannerColorLightROSWrapper::create_lookahead_point_marker(Point_2 lookahead_pt) {
+    
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "base_footprint";
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "lookahead_point";
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.lifetime = ros::Duration(1/PATH_PLANNING_RATE);
+
+    marker.pose.position.x = CGAL::to_double(lookahead_pt.x());
+    marker.pose.position.y = CGAL::to_double(lookahead_pt.y());
+    marker.pose.position.z = 0; 
+
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+
+    marker.scale.x = 0.3;
+    marker.scale.y = 0.3;
+    marker.scale.z = 0.3;
+
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0; 
 
     return marker;
 }
