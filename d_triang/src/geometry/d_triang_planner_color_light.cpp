@@ -213,9 +213,11 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::ve
         return path_group_1;        
     }
     
+    // std::cout << "Print points: " << std::endl;
     std::vector<Point_2> cone_as_pt;
     for (auto cone : group_1){
         cone_as_pt.push_back(cone.point);
+        // std::cout << cone.point << std::endl;
     }
 
     int cone_color = group_1.at(0).color;
@@ -226,7 +228,6 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::ve
         is_offset_left = false;
 
     path_group_1 = offset_polyline(cone_as_pt, TRACK_WIDTH/2, is_offset_left);
-    
     // std::cout<< "Print offset: " << std::endl;
     // for (const auto& p : path_group_1){
     //     std::cout << p << std::endl;

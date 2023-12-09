@@ -148,6 +148,10 @@ protected:
     */
     std::vector<std::pair<Point_2, Point_2>> get_edges_for_plotting();
 
+    /*
+    p1 is current node, p2 is next node
+    */
+    double compute_orientation(const Point_2& p1, const Point_2& p2);
 
 private:
     std::pair<Point_2, Point_2> get_points_from_edge(const Edge& edge);
@@ -167,18 +171,16 @@ private:
     // Normalize the angle difference to the range (-π, π)
     double normalize(double angle); // static?
 
-    /*
-    p1 is current node, p2 is next node
-    */
-    double compute_orientation(const Point_2& p1, const Point_2& p2);
+
 
 
 
 
 protected: 
     const double PATH_PLANNING_RATE = 30;
-    double TRACK_WIDTH = 3.0;
-    double LOOKAHEAD_DISTANCE = 5.0;
+    const double TRACK_WIDTH = 3.0;
+    const double LOOKAHEAD_DISTANCE = 3.0;
+    const double CAR_ACCELERATION = 0.1;
     
     // All the possible paths found, each vector of Point_2 represents a path
     std::vector<std::vector<Point_2>> _paths_group_2;

@@ -70,9 +70,11 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
 
         Point_2 lookahead_pt = find_lookahead_point();
 
+        double angle_diff = compute_orientation(Point_2(0,0), lookahead_pt);
+        // std::cout << "ANGLE DIFF:  " << angle_diff << std::endl;
 
-
-
+        auto ackerman_msg = create_ackermann_drive_stamped_msg(angle_diff,CAR_ACCELERATION);
+        _pub_command_vel.publish(ackerman_msg);
 
 
 
@@ -95,6 +97,23 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
     }
 }
 
+ackermann_msgs::AckermannDriveStamped DTriangPlannerColorLightROSWrapper::create_ackermann_drive_stamped_msg(float steering_angle, float acceleration) {
+    // Create an AckermannDrive message
+    ackermann_msgs::AckermannDrive drive_msg;
+    drive_msg.steering_angle = steering_angle;
+    drive_msg.acceleration = acceleration;
+
+    // Create a Header message with the current timestamp
+    std_msgs::Header header_msg;
+    header_msg.stamp = ros::Time::now();
+
+    // Create an AckermannDriveStamped message
+    ackermann_msgs::AckermannDriveStamped ackermann_drive_stamped_msg;
+    ackermann_drive_stamped_msg.header = header_msg;
+    ackermann_drive_stamped_msg.drive = drive_msg;
+
+    return ackermann_drive_stamped_msg;
+}
 
 //////// Visualising //////////////////////////////////
 visualization_msgs::MarkerArray DTriangPlannerColorLightROSWrapper::create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges) {

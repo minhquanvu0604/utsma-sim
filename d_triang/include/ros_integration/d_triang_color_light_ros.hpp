@@ -23,7 +23,11 @@ public:
 
     void execution_loop();
 
+
 private:
+    ackermann_msgs::AckermannDriveStamped create_ackermann_drive_stamped_msg(float steering_angle, float acceleration);
+
+
     visualization_msgs::MarkerArray create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges);
     visualization_msgs::Marker create_path_marker(const std::vector<Point_2>& path, double red, double green, double blue, double alpha);
     visualization_msgs::Marker create_lookahead_point_marker(Point_2 lookahead_pt);
