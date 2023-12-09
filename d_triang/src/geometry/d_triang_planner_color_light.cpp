@@ -59,7 +59,7 @@ bool DTriangPlannerColorLight::set_cones(const std::vector<DTCL::Cone>& cones_lo
         if (path_group_2.empty() && path_group_1.size() == 1){
             std::cout << "\033[33m[WARNING] path_group_2 is empty\033[0m" << std::endl;
             print_cones(sorted_cones);
-            throw std::runtime_error("!");
+            // throw std::runtime_error("!");
         }        
     }
 
@@ -137,7 +137,7 @@ bool DTriangPlannerColorLight::set_cones_debug(const std::vector<DTCL::Cone>& co
         if (path_group_2.empty() && path_group_1.size() == 1){
             std::cout << "\033[33m[WARNING] path_group_2 is empty\033[0m" << std::endl;
             print_cones(sorted_cones);
-            throw std::runtime_error("!");
+            // throw std::runtime_error("!");
         }        
     }
 
@@ -212,6 +212,14 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::ve
         path_group_1.push_back(car_pt); // Include the car position
         return path_group_1;        
     }
+
+    // Handle 1 cone situation
+    if(group_1.size() == 1){
+        path_group_1.push_back(car_pt);
+        Point_2 only_pt = group_1.at(0).point;
+        path_group_1.push_back(Point_2(only_pt.x(), only_pt.y() + (group_1.at(0).color ? -1 : 1) * TRACK_WIDTH/2));
+        return path_group_1;
+    }
     
     // std::cout << "Print points: " << std::endl;
     std::vector<Point_2> cone_as_pt;
@@ -228,7 +236,8 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::ve
         is_offset_left = false;
 
     path_group_1 = offset_polyline(cone_as_pt, TRACK_WIDTH/2, is_offset_left);
-    // std::cout<< "Print offset: " << std::endl;
+
+    // std::cout<< "Print offset: " << path_group_1.size() << std::endl;
     // for (const auto& p : path_group_1){
     //     std::cout << p << std::endl;
     // }

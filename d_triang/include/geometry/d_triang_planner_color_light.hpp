@@ -172,10 +172,6 @@ private:
     double normalize(double angle); // static?
 
 
-
-
-
-
 protected: 
     const double PATH_PLANNING_RATE = 30;
     const double TRACK_WIDTH = 3.0;

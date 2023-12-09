@@ -4,19 +4,12 @@
 DTriangPlannerColorLightROSWrapper::DTriangPlannerColorLightROSWrapper(ros::NodeHandle nh)
     : _path_planning_rate(PATH_PLANNING_RATE), _visualise{true}
 {
-    
-    ROS_INFO("DTriangPlannerColorLightROSWrapper Constructor");
 
     _nh = nh;
 
-    // Subscribing cones location from computervision
     _sub_cone_array = _nh.subscribe("/ground_truth/cones", 1000, &DTriangPlannerColorLightROSWrapper::cone_array_callback,this);
-
-    // Publishing velocity command
+    
     _pub_command_vel = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/cmd_vel_out",3,false);
-
-
-    // Publishing markers
     _pub_marker = _nh.advertise<visualization_msgs::MarkerArray>("visualization_marker",3,false);
 
     execution_loop();
@@ -58,8 +51,8 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
             continue;
         }
 
-        set_cones(_incoming_cones);
         // set_cones_debug(_incoming_cones);
+        set_cones(_incoming_cones);
 
         // Check the number of edges that are going to be plot, if forget to _paths.clear() will create increasing number of markers
         std::vector<std::pair<Point_2, Point_2>> plotting_edges = get_edges_for_plotting();  
@@ -83,7 +76,7 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
             visualization_msgs::MarkerArray edges_marker_array = create_triangulation_edge_marker_array(plotting_edges);
             marker_array.markers.insert(marker_array.markers.end(), edges_marker_array.markers.begin(), edges_marker_array.markers.end());        
 
-            visualization_msgs::Marker best_path_marker = create_path_marker(best_path, 0.0, 1.0, 0.0, 1);
+            visualization_msgs::Marker best_path_marker = create_path_marker(best_path, 0.0, 1.0, 0.0, 0.5);
             marker_array.markers.push_back(best_path_marker);        
 
             visualization_msgs::Marker lookahead_pt_marker = create_lookahead_point_marker(lookahead_pt);
@@ -136,7 +129,7 @@ visualization_msgs::MarkerArray DTriangPlannerColorLightROSWrapper::create_trian
 
         marker.scale.x = 0.02; // Line width
         marker.color.r = 1.0; // Red color
-        marker.color.a = 1.0; // Fully opaque
+        marker.color.a = 0.8; // Fully opaque
 
         geometry_msgs::Point point_start, point_end;
         point_start.x = CGAL::to_double(edge.first.x());
@@ -164,7 +157,7 @@ visualization_msgs::Marker DTriangPlannerColorLightROSWrapper::create_path_marke
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.lifetime = ros::Duration(1/PATH_PLANNING_RATE);
 
-    marker.scale.x = 0.02; // Line width
+    marker.scale.x = 0.1; // Line width
     marker.color.r = red;
     marker.color.g = green;
     marker.color.b = blue;
@@ -208,14 +201,14 @@ visualization_msgs::Marker DTriangPlannerColorLightROSWrapper::create_lookahead_
     marker.pose.orientation.z = 0.0;
     marker.pose.orientation.w = 1.0;
 
-    marker.scale.x = 0.3;
-    marker.scale.y = 0.3;
-    marker.scale.z = 0.3;
+    marker.scale.x = 0.35;
+    marker.scale.y = 0.35;
+    marker.scale.z = 0.35;
 
     marker.color.r = 0.0;
     marker.color.g = 1.0;
     marker.color.b = 0.0;
-    marker.color.a = 1.0; 
+    marker.color.a = 0.9; 
 
     return marker;
 }
