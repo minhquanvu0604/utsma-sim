@@ -254,6 +254,31 @@ std::vector<Point_2> DTriangPlannerColorLight::process_group_1_mtc(const std::ve
 
     path_group_1.insert(path_group_1.begin(), car_pt); 
 
+
+
+    // Find the pt to connect with car pt that complies to angle condition
+    // int first_waypt_id = -1;
+    for (int i = 1; i < path_group_1.size(); i++){
+        
+        // Angle from first car to pt in offset_line 
+        double angle = abs((compute_orientation(car_pt, path_group_1.at(i))));
+
+        // 'Preliminary condtion'
+        if (angle > M_PI/4){
+            path_group_1.erase(path_group_1.begin() + i);
+            i--;
+            continue;
+        }
+        else 
+            break;
+
+        // Yellow text
+        std::cout << "\033[33m[WARNING] Cannot find first waypoint in group 1\033[0m" << std::endl;
+    }  
+
+
+
+
     return path_group_1;
 }
 

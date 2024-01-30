@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   ackermann_msgs
   eufs_msgs
+  can_msgs
   gazebo_msgs
   OpenCV REQUIRED
 )

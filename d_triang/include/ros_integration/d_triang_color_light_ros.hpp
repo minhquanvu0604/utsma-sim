@@ -7,6 +7,8 @@
 
 #include <eufs_msgs/ConeArrayWithCovariance.h>
 #include <geometry_msgs/Point.h>
+#include <std_msgs/UInt8MultiArray.h>
+
 
 #include "d_triang_planner_color_light.hpp"
 #include "ackermann_msgs/AckermannDriveStamped.h"
@@ -26,6 +28,7 @@ public:
 
 private:
     ackermann_msgs::AckermannDriveStamped create_ackermann_drive_stamped_msg(float steering_angle, float acceleration);
+    std_msgs::UInt8MultiArray create_steering_msg(int8_t steering_angle);
 
 
     visualization_msgs::MarkerArray create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges);
@@ -40,6 +43,7 @@ private:
 
     ros::Publisher _pub_command_vel;
     ros::Publisher _pub_marker;
+    ros::Publisher _pub_steering_angle;
 
     ros::Rate _path_planning_rate;
 

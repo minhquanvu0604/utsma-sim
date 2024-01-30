@@ -174,6 +174,10 @@ private:
 
 protected: 
     const double PATH_PLANNING_RATE = 30;
+    const double DT = 1 / PATH_PLANNING_RATE;
+    double _last_angle = 0;
+
+
     const double TRACK_WIDTH = 3.0;
     const double LOOKAHEAD_DISTANCE = 3.0;
     const double CAR_ACCELERATION = 0.1;

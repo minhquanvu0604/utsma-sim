@@ -11,6 +11,7 @@ DTriangPlannerColorLightROSWrapper::DTriangPlannerColorLightROSWrapper(ros::Node
     
     _pub_command_vel = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/cmd_vel_out",3,false);
     _pub_marker = _nh.advertise<visualization_msgs::MarkerArray>("visualization_marker",3,false);
+    _pub_steering_angle = _nh.advertise<std_msgs::UInt8MultiArray>("/steer_angle", 1);
 
     execution_loop();
 };
@@ -64,12 +65,53 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
         Point_2 lookahead_pt = find_lookahead_point();
 
         double angle_diff = compute_orientation(Point_2(0,0), lookahead_pt);
-        // std::cout << "ANGLE DIFF:  " << angle_diff << std::endl;
+        double angle_diff_deg = (angle_diff * 180 / M_PI) * 1.5;
+        std::cout << "ANGLE DIFF:  " << angle_diff << std::endl;
 
+        std::cout << "LAST ANGLE:  " << _last_angle << std::endl;
+
+
+        double angle_change = angle_diff - _last_angle;
+        std::cout << "ANGLE CHANGE:  " << angle_change << std::endl;
+
+        double max_angle_change = M_PI/(PATH_PLANNING_RATE * 18); // 1 sec 10 deg max   
+        std::cout << "MAX ANGLE CHANGE:  " << max_angle_change << std::endl;
+
+
+        if (angle_change > max_angle_change){         
+            angle_diff = _last_angle + max_angle_change;
+            std::cout << "\033[33mFixing Angle > \033[0m" << angle_diff << std::endl;
+
+        } 
+        if (angle_change < -max_angle_change){
+            angle_diff = _last_angle - max_angle_change;
+            std::cout << "\033[33mFixing Angle < \033[0m" << angle_diff << std::endl;
+
+        }
+
+        {
+            double proper_angle_change = angle_diff - _last_angle;
+            std::cout << "PROPER ANGLE CHANGE:  " << proper_angle_change << std::endl;
+
+        }
+
+        _last_angle = angle_diff;
+
+
+        // if (angle_vel > max_angle_vel){
+        //     std::cout << "\033[33mFixing Angle\033[0m" << std::endl;
+        //     angle_diff = max_angle_vel * dt;
+        //     std::cout << "NEW ANGLE DIFF:  " << angle_diff << std::endl;
+        // }
+            
+
+
+        /////
         auto ackerman_msg = create_ackermann_drive_stamped_msg(angle_diff,CAR_ACCELERATION);
         _pub_command_vel.publish(ackerman_msg);
-
-
+        auto control_msg = create_steering_msg(angle_diff_deg);        
+        _pub_steering_angle.publish(control_msg);
+        ////
 
         if (_visualise){
 
@@ -90,6 +132,7 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
     }
 }
 
+
 ackermann_msgs::AckermannDriveStamped DTriangPlannerColorLightROSWrapper::create_ackermann_drive_stamped_msg(float steering_angle, float acceleration) {
     // Create an AckermannDrive message
     ackermann_msgs::AckermannDrive drive_msg;
@@ -107,6 +150,26 @@ ackermann_msgs::AckermannDriveStamped DTriangPlannerColorLightROSWrapper::create
 
     return ackermann_drive_stamped_msg;
 }
+
+
+std_msgs::UInt8MultiArray DTriangPlannerColorLightROSWrapper::create_steering_msg(int8_t steering_angle)
+{
+    // Map the steering angle from [-30, 30] to [0, 255]
+    uint8_t mapped_steering = static_cast<uint8_t>((steering_angle + 30) * (255.0 / 60.0));
+
+    double ddd = (steering_angle + 30) * (255.0 / 60.0);
+    std::cout << "mapped steering value: " << ddd << std::endl;
+
+    std_msgs::UInt8MultiArray control_msg;
+    control_msg.data.push_back(mapped_steering);
+
+    // Assuming braking_value is also in the range [0, 255]
+    // control_msg.data.push_back(braking_value);
+
+    return control_msg;
+}
+
+
 
 //////// Visualising //////////////////////////////////
 visualization_msgs::MarkerArray DTriangPlannerColorLightROSWrapper::create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges) {
