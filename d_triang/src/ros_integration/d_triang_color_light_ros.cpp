@@ -40,6 +40,9 @@ void DTriangPlannerColorLightROSWrapper::cone_array_callback(const eufs_msgs::Co
 
 
 void DTriangPlannerColorLightROSWrapper::execution_loop(){
+
+    double max_angle_change = M_PI/(PATH_PLANNING_RATE * 18); // 1 sec 10 deg max   WHAT IS 18 ??
+
     while (ros::ok()){
         _dt.clear();
 
@@ -64,57 +67,36 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
 
         Point_2 lookahead_pt = find_lookahead_point();
 
-        double angle_diff = compute_orientation(Point_2(0,0), lookahead_pt);
-        double angle_diff_deg = (angle_diff * 180 / M_PI) * 1.5;
-        std::cout << "ANGLE DIFF:  " << angle_diff << std::endl;
-
-        std::cout << "LAST ANGLE:  " << _last_angle << std::endl;
+        double angle_to_goal = compute_orientation(Point_2(0,0), lookahead_pt);
+        // std::cout << "ANGLE DIFF:  " << angle_to_goal << std::endl;
+        // std::cout << "LAST ANGLE:  " << _last_angle << std::endl;
 
 
-        double angle_change = angle_diff - _last_angle;
-        std::cout << "ANGLE CHANGE:  " << angle_change << std::endl;
+        // Fixing the angle - should be inside model plugin to represent car response
+        double angle_changed = angle_to_goal - _last_angle;
+        
 
-        double max_angle_change = M_PI/(PATH_PLANNING_RATE * 18); // 1 sec 10 deg max   
-        std::cout << "MAX ANGLE CHANGE:  " << max_angle_change << std::endl;
-
-
-        if (angle_change > max_angle_change){         
-            angle_diff = _last_angle + max_angle_change;
-            std::cout << "\033[33mFixing Angle > \033[0m" << angle_diff << std::endl;
-
+        if (angle_changed > max_angle_change){         
+            angle_to_goal = _last_angle + max_angle_change;
+            std::cout << "\033[33mFixing Angle < \033[0m" << std::endl;
         } 
-        if (angle_change < -max_angle_change){
-            angle_diff = _last_angle - max_angle_change;
-            std::cout << "\033[33mFixing Angle < \033[0m" << angle_diff << std::endl;
-
+        if (angle_changed < -max_angle_change){
+            angle_to_goal = _last_angle - max_angle_change;
+            std::cout << "\033[33mFixing Angle < \033[0m" << std::endl;
         }
+        std::cout << "FIXED ANGLE:  " << angle_to_goal << std::endl;
 
-        {
-            double proper_angle_change = angle_diff - _last_angle;
-            std::cout << "PROPER ANGLE CHANGE:  " << proper_angle_change << std::endl;
-
-        }
-
-        _last_angle = angle_diff;
-
-
-        // if (angle_vel > max_angle_vel){
-        //     std::cout << "\033[33mFixing Angle\033[0m" << std::endl;
-        //     angle_diff = max_angle_vel * dt;
-        //     std::cout << "NEW ANGLE DIFF:  " << angle_diff << std::endl;
-        // }
-            
-
+        _last_angle = angle_to_goal;    
 
         /////
-        auto ackerman_msg = create_ackermann_drive_stamped_msg(angle_diff,CAR_ACCELERATION);
+        double angle_to_goal_deg = (angle_to_goal * 180 / M_PI) * 1.5; // WHY 1.5 ??
+        auto ackerman_msg = create_ackermann_drive_stamped_msg(angle_to_goal,CAR_ACCELERATION);
         _pub_command_vel.publish(ackerman_msg);
-        auto control_msg = create_steering_msg(angle_diff_deg);        
+        auto control_msg = create_steering_msg(angle_to_goal_deg);        
         _pub_steering_angle.publish(control_msg);
         ////
 
         if (_visualise){
-
             visualization_msgs::MarkerArray edges_marker_array = create_triangulation_edge_marker_array(plotting_edges);
             marker_array.markers.insert(marker_array.markers.end(), edges_marker_array.markers.begin(), edges_marker_array.markers.end());        
 
@@ -126,8 +108,7 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
 
             _pub_marker.publish(marker_array);            
         }
-
-
+        
         _path_planning_rate.sleep();
     }
 }
