@@ -37,6 +37,8 @@ The digram illustrates the hierarchy of launch files and xacro for robot descrip
 
 cgal `sudo apt install libcgal-dev`
 
+ros_can_msg
+
 ## External Links
 
 University of Technology Sydney:
