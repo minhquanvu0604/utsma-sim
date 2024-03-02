@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   can_msgs
   gazebo_msgs
   OpenCV REQUIRED
+  genmsg
 )
 
 find_package(CGAL REQUIRED COMPONENTS Core)

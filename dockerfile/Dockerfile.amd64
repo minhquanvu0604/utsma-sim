@@ -1,0 +1,84 @@
+FROM osrf/ros:noetic-desktop-full-focal
+
+# Setup basic
+RUN apt update && apt install -y \
+    git \
+    gcc \
+    curl \
+    wget \
+    python3-catkin-tools \
+    python3-pip \
+    libudev-dev \
+    libcgal-dev \
+    qtbase5-dev \
+    qtdeclarative5-dev \
+    qtmultimedia5-dev \
+    qtquickcontrols2-5-dev \ 
+# Pfms
+    python3-rosdep \ 
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-wstool \
+    build-essential \
+    ros-noetic-gazebo-ros-pkgs \
+    ros-noetic-robot-state-publisher \
+    ros-noetic-tf2-ros \
+    libignition-math4-dev \    
+# end Pfms
+    ros-noetic-joy \
+    ros-noetic-can-msgs \
+    ros-noetic-ackermann-msgs && \
+    pip3 install flask waitress opencv-python numpy datetime && \
+# bashrc
+    echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+# Initialize rosdep
+RUN rosdep init ; \
+    rosdep update
+
+# Install Google Unit Testing
+RUN apt-get install -y libgtest-dev && \
+    cd /usr/src/gtest && \
+    cmake . && \
+    make
+
+# Configure ur_ws
+RUN mkdir -p utsma_ws/src && \
+    cd utsma_ws && \
+    catkin init && \
+    cd src && \
+    git clone -b ros1 https://gitlab.com/eufs/eufs_msgs.git
+
+# Create a workspace for ROS
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && \
+    cd /utsma_ws && \
+    catkin_make -j2"
+
+COPY . /utsma_ws/src/
+
+# Create a workspace for ROS
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && \
+    cd /utsma_ws && \
+    catkin_make -j2 && \
+    cd src/ && \
+    rm -rf d_triang" 
+
+# # # Clean up to free space
+# # RUN apt-get clean
+
+# # Custom ENTRYPOINT
+# COPY ros_entrypoint.sh /ros_entrypoint.sh
+
+# Set working directory
+# WORKDIR /root/utsma_ws
+
+
+# # Launch utsma_sim
+# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash \
+#     source ${HOME}/utsma_ws/devel/setup.bash \
+#     roslaunch utsma_gazebo simulation.launch"
+#     #rosrun d_triang utsma_path_planner"
+
+# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash \
+#     source ${HOME}/utsma_ws/devel/setup.bash \
+#     rosrun d_triang utsma_path_planner"
