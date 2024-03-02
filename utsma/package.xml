@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>utsma</name>
+  <version>0.1.0</version>
+  <description>
+    Software Stack for UTS Motorsports Autonomous.
+  </description>
+
+  <license>MIT</license>
+  <author email="quanvu0604@gmail.com">Minh Quan Vu</author>
+  <maintainer email="quanvu0604@gmail.com">Minh Quan Vu</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>utsma_base</exec_depend>
+  <exec_depend>utsma_description</exec_depend>
+  <exec_depend>utsma_navigation</exec_depend>
+  <exec_depend>utsma_gazebo</exec_depend>
+  <exec_depend>d_triang</exec_depend>
+
+  <export><metapackage/></export>
+  
+</package>
