@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
         eufs_msgs
         tf2_ros
         tf
+        genmsg
         )
 
 find_package(Boost REQUIRED COMPONENTS thread)
@@ -31,6 +32,7 @@ catkin_package(
         ackermann_msgs
         tf2_ros
         tf
+        genmsg
 )
 
 add_subdirectory(gazebo_cone_ground_truth)

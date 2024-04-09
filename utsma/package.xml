@@ -16,6 +16,7 @@
   <exec_depend>utsma_description</exec_depend>
   <exec_depend>utsma_navigation</exec_depend>
   <exec_depend>utsma_gazebo</exec_depend>
+  <exec_depend>d_triang</exec_depend>
 
   <export><metapackage/></export>
   

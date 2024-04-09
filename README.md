@@ -37,6 +37,8 @@ The digram illustrates the hierarchy of launch files and xacro for robot descrip
 
 cgal `sudo apt install libcgal-dev`
 
+can_msgs (temp: for d_triang and simulation to communicate with can system)
+
 ## External Links
 
 University of Technology Sydney:
