@@ -54,3 +54,6 @@ CATKIN_IGNORE
 # Vscode - should be used?
 .vscode/
 **/.vscode/
+
+# Docker images
+utsma_demo_img
