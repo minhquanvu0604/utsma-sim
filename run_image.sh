@@ -11,7 +11,7 @@ docker run --privileged \
            --detach \
            --name utsma_demo_sim \
            --network "host" \
-           -e ROS_MASTER_URI="http://localhost:11311" \
+           -e ROS_MASTER_URI=http://localhost:11311 \
            -e DISPLAY=$DISPLAY \
            -v /tmp/.X11-unix:/tmp/.X11-unix \
            utsma_demo_img:latest \
@@ -22,7 +22,7 @@ docker run --privileged \
            --detach \
            --name utsma_demo_path_planning \
            --network "host" \
-           -e ROS_MASTER_URI="http://localhost:11311" \
+           -e ROS_MASTER_URI=http://localhost:11311 \
            -e DISPLAY=$DISPLAY \
            -v /tmp/.X11-unix:/tmp/.X11-unix \
            utsma_demo_img:latest \
@@ -34,7 +34,7 @@ docker run --privileged \
            --detach \
            --name utsma_demo_code_viewer \
            --network "host" \
-           -e ROS_MASTER_URI="http://localhost:11311" \
+           -e ROS_MASTER_URI=http://localhost:11311 \
            -e DISPLAY=$DISPLAY \
            -v /tmp/.X11-unix:/tmp/.X11-unix \
            utsma_demo_img:latest \

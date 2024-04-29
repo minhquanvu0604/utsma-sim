@@ -51,6 +51,9 @@ qtcreator-*
 # Catkin custom files
 CATKIN_IGNORE
 
-# Vscode - should be used?
-.vscode/
-**/.vscode/
+# Vscode
+#.vscode/
+#**/.vscode/
+
+# Docker images
+utsma_demo_img

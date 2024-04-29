@@ -60,8 +60,9 @@ COPY . /utsma_ws/src/
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && \
     cd /utsma_ws && \
     catkin_make -j2 && \
-    cd src/ && \
-    rm -rf d_triang" 
+    cd src/" 
+# && \
+#    rm -rf d_triang" 
 
 # # # Clean up to free space
 # # RUN apt-get clean
