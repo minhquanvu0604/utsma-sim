@@ -59,8 +59,8 @@ COPY . /utsma_ws/src/
 # Create a workspace for ROS
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && \
     cd /utsma_ws && \
-    catkin_make -j2 && \
-    cd src/" 
+    catkin_make -j2"
+# cd src/" 
 # && \
 #    rm -rf d_triang" 
 

@@ -57,3 +57,7 @@ CATKIN_IGNORE
 
 # Docker images
 utsma_demo_img
+utsma_dtriang_img
+
+# DT
+DTPlanner
