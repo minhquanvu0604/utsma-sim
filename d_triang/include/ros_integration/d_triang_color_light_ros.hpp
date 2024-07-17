@@ -12,6 +12,7 @@
 
 #include "d_triang_planner_color_light.hpp"
 #include "ackermann_msgs/AckermannDriveStamped.h"
+#include "nav_msgs/Path.h"
 
 /*
 The car is in the main thread
@@ -29,7 +30,7 @@ public:
 private:
     ackermann_msgs::AckermannDriveStamped create_ackermann_drive_stamped_msg(float steering_angle, float acceleration);
     std_msgs::UInt8MultiArray create_steering_msg(int8_t steering_angle);
-
+    nav_msgs::Path create_path_msg(const std::vector<Point_2>& path);
 
     visualization_msgs::MarkerArray create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges);
     visualization_msgs::Marker create_path_marker(const std::vector<Point_2>& path, double red, double green, double blue, double alpha);
@@ -44,6 +45,7 @@ private:
     ros::Publisher _pub_command_vel;
     ros::Publisher _pub_marker;
     ros::Publisher _pub_steering_angle;
+    ros::Publisher _pub_path;
 
     ros::Rate _path_planning_rate;
 

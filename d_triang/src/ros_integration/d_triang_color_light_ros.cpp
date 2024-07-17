@@ -12,6 +12,7 @@ DTriangPlannerColorLightROSWrapper::DTriangPlannerColorLightROSWrapper(ros::Node
     _pub_command_vel = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/cmd_vel_out",3,false);
     _pub_marker = _nh.advertise<visualization_msgs::MarkerArray>("visualization_marker",3,false);
     _pub_steering_angle = _nh.advertise<std_msgs::UInt8MultiArray>("/steer_angle", 1);
+    _pub_path = _nh.advertise<nav_msgs::Path>("/path", 1);
 
     execution_loop();
 };
@@ -62,8 +63,13 @@ void DTriangPlannerColorLightROSWrapper::execution_loop(){
         std::vector<std::pair<Point_2, Point_2>> plotting_edges = get_edges_for_plotting();  
         // std::cout << "Number of edges for plotting: " << plotting_edges.size() << std::endl;
 
-
         std::vector<Point_2> best_path = get_ultimate_path(); 
+
+        /// Publish the path
+        if (best_path.size() >= 3) // Get rid of the last point because of inaccurate geometric solving from cmt's offset
+            best_path.pop_back();
+        nav_msgs::Path path_msg = create_path_msg(best_path);
+        _pub_path.publish(path_msg);
 
         Point_2 lookahead_pt = find_lookahead_point();
 
@@ -150,7 +156,22 @@ std_msgs::UInt8MultiArray DTriangPlannerColorLightROSWrapper::create_steering_ms
     return control_msg;
 }
 
+nav_msgs::Path DTriangPlannerColorLightROSWrapper::create_path_msg(const std::vector<Point_2>& path) {
+    nav_msgs::Path path_msg;
+    path_msg.header.frame_id = "base_footprint";
+    path_msg.header.stamp = ros::Time::now();
 
+    for (const auto& point : path) {
+        geometry_msgs::PoseStamped pose_stamped;
+        pose_stamped.pose.position.x = CGAL::to_double(point.x());
+        pose_stamped.pose.position.y = CGAL::to_double(point.y());
+        pose_stamped.pose.position.z = 0.0; // Assuming 2D points
+
+        path_msg.poses.push_back(pose_stamped);
+    }
+
+    return path_msg;
+}
 
 //////// Visualising //////////////////////////////////
 visualization_msgs::MarkerArray DTriangPlannerColorLightROSWrapper::create_triangulation_edge_marker_array(const std::vector<std::pair<Point_2, Point_2>>& edges) {

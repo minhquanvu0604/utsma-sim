@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   roslib # Needed for ros::package::getPath
   geometry_msgs
   ackermann_msgs
+  nav_msgs
   eufs_msgs
   can_msgs
   gazebo_msgs
@@ -133,12 +134,14 @@ catkin_package(
     geometry_msgs
     eufs_msgs
     ackermann_msgs
+    nav_msgs
     tf2_ros
     tf
 
     DEPENDS 
     eufs_msgs 
     ackermann_msgs
+    nav_msgs
 )
 
 ###########
